@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.30804.86
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "azutil-core", "azutil-core.csproj", "{5143ADC5-31E0-4237-9BC1-D09E609AD769}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "_azutil-core", "_azutil-core.csproj", "{0E190273-16A1-4E95-8EEA-8CED85397528}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -11,10 +11,10 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{5143ADC5-31E0-4237-9BC1-D09E609AD769}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{5143ADC5-31E0-4237-9BC1-D09E609AD769}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{5143ADC5-31E0-4237-9BC1-D09E609AD769}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{5143ADC5-31E0-4237-9BC1-D09E609AD769}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0E190273-16A1-4E95-8EEA-8CED85397528}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0E190273-16A1-4E95-8EEA-8CED85397528}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0E190273-16A1-4E95-8EEA-8CED85397528}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0E190273-16A1-4E95-8EEA-8CED85397528}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
