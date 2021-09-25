@@ -16,6 +16,7 @@ namespace azutil_core
 {
     public static class AzExtensions
     {
+        //test
         //IP Location Provider is provided by ipstack.com. 
         //I have registered it as azrinsani@gmail.com, pw: withips
         public static async Task<IPLocation> GetLocationByIp(this HttpClient httpClient, string ip=null)
