@@ -1,8 +1,12 @@
 ﻿//using Npgsql;
+using Newtonsoft.Json.Linq;
+using System;
 using System.Collections.Generic;
 using System.Data;
+using System.IO;
 using System.Linq;
 using System.Net;
+using System.Net.Http;
 using System.Net.Mail;
 using System.Threading.Tasks;
 
@@ -15,31 +19,12 @@ namespace AzUtil.Core
         //Task<DataTable> SqlQueryAsync(string query, string connStr, params object[] Inputs);
         Task SendMail(SMTPSettings sMTP);
     }
-
-   
-    public class AzUtil : IAzUtil
+    public class Utilities : IAzUtil
     {
         public static int MySQLTimeout = 0;
 
-        //public async Task<DataTable> SqlQueryAsync(string query, string connStr, params object[] Inputs)
-        //{
-        //    using var sqlConnection = new NpgsqlConnection(connStr);
-        //    DataTable DT = new DataTable();
-        //    sqlConnection.Open();
-        //    using var command = sqlConnection.CreateCommand();
-        //    command.CommandTimeout = AzUtil.MySQLTimeout;
-        //    command.CommandText = query;
-        //    int inputCount = Inputs.Count();
-        //    string[] Variables = new string[inputCount];
-        //    for (int n = 1; n <= inputCount; n++) Variables[n - 1] = "@P" + n;
-        //    if (Inputs != null) for (int n = 0; n < Inputs.Count(); n++) command.Parameters.AddWithValue(Variables[n], Inputs[n]);
-        //    using var Results = await command.ExecuteReaderAsync();
-        //    for (int i = 0; i < Results.FieldCount; i++) DT.Columns.Add(Results.GetName(i));
-        //    DT.Load(Results);
-        //    return DT;
-        //}
+        
 
-       
         public async Task SendMail(SMTPSettings sMTP)
         {
             SmtpClient client = new SmtpClient(sMTP.Host, sMTP.Port)

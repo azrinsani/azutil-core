@@ -1,30 +1,67 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text;
-using System.Globalization;
-using System.Linq;
-using System.Text.RegularExpressions;
-using System.Diagnostics;
-using System.IO;
-using System.Runtime.Serialization.Formatters.Binary;
-using System.Collections;
-using System.Buffers;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
+using System.Globalization;
+using System.IO;
+using System.Linq;
+using System.Net.Http;
+using System.Text;
+using System.Text.RegularExpressions;
+using System.Threading.Tasks;
+using AzUtil.Core;
+using Newtonsoft.Json.Linq;
 
-namespace AzUtil.Core
+namespace azutil_core
 {
     public static class AzExtensions
     {
-       
-        public static bool HasDateOnly(this DateTime dateTime) => dateTime.Hour == 0 && dateTime.Minute == 0 && dateTime.Second == 0 && dateTime.Millisecond == 0;
-        public static string TrimEnd(this string src, string StringToTrim)
+        //IP Location Provider is provided by ipstack.com. 
+        //I have registered it as azrinsani@gmail.com, pw: withips
+        public static async Task<IPLocation> GetLocationByIp(this HttpClient httpClient, string ip=null)
         {
-            if (src != null && src.EndsWith(StringToTrim))
+            if (ip == null)
             {
-                src = src.Substring(0, src.Length - StringToTrim.Length);
+                try
+                {
+                    Uri uri = new Uri("http://api.ipify.org");
+                    HttpResponseMessage response = await httpClient.GetAsync(uri);
+                    if (response.IsSuccessStatusCode)
+                    {
+                        ip = await response.Content.ReadAsStringAsync();
+                    }
+                    else return null;
+                }
+                catch (Exception)
+                {
+                    return null;
+                }
+
             }
-            return src;
+            string url = "http://api.ipstack.com/" + ip + "?access_key=71703c2a662e2a6afecc0ee7e565d356";
+            try
+            {
+                Uri uri = new Uri(string.Format(url, string.Empty));
+                HttpResponseMessage response = await httpClient.GetAsync(uri);
+                if (response.IsSuccessStatusCode)
+                {
+                    string content = await response.Content.ReadAsStringAsync();
+                    JObject obj = JObject.Parse(content);
+                    string city = (string)obj["city"];
+                    string region = (string)obj["region_name"];
+                    string country = (string)obj["country_name"];
+                    string countryCode = (string)obj["country_code"];
+                    return new IPLocation(city, region, country, countryCode);
+                }
+                else return null;
+            }
+            catch
+            {
+                return null;
+            }
         }
+        public static bool HasDateOnly(this DateTime dateTime) => dateTime.Hour == 0 && dateTime.Minute == 0 && dateTime.Second == 0 && dateTime.Millisecond == 0;
+        
         public static List<int> FindIndexes<T>(this IList<T> source, Func<T, bool> predicate)
         {
             List<int> res = new List<int>();
@@ -74,13 +111,7 @@ namespace AzUtil.Core
             if (res != null) index = source.IndexOf(res);
             return res;
         }
-        public static string ToMySqlTimeStamp(this DateTime Value)
-        {
-            //return Value.ToString("yyyy-MM-dd HH:mm:ss.fff");
-            return Value.ToString("yyyy-MM-dd HH:mm:ss.fff");
-            //return Value.Year + "-" + Value.Month + '-' + Value.Day + " " + Value.Hour + ":" + Value.Minute + ":" + Value.Second + "." + Value.Millisecond;
-        }
-
+        
         public static void AddRepeat<T>(this IList<T> list, Func<T> contructor, int numberOfTimes)
         {
             for (int n = 0; n < numberOfTimes; n++)
@@ -92,11 +123,7 @@ namespace AzUtil.Core
         
         public static bool IsEither(this IComparable source, params IComparable[] items)
         {
-            foreach (var item in items)
-            {
-                if (source == item) return true;
-            }
-            return false;
+            return items.Any(item => Equals(source, item));
         }
         public static string RegexRemoveFirst(this string source, Regex regex, out string removed)
         {            
@@ -147,10 +174,10 @@ namespace AzUtil.Core
         }
         public static string RemoveLastCharacter(this string source)
         {
-            if (source == null) return source;
+            if (source == null) return null;
             return source.Remove(source.Length - 1);
         }
-        public static string RemoveLastCRLNIfExist(this string source)
+        public static string RemoveLastCrlnIfExist(this string source)
         {
             if (source.Length <= 2) return source;
             if (source[^2..] == "\r\n") return source.Remove(source.Length - 2);
@@ -217,10 +244,11 @@ namespace AzUtil.Core
         public static string ConcatString(this IEnumerable<string> strs, string separator = null)
         {
             string combinedStr = "";
-            int strCount = strs.Count();
+            var enumerable = strs as string[] ?? strs.ToArray();
+            int strCount = enumerable.Count();
             if (strCount == 0) return "";
             
-            strs.ForEach((e, n) => 
+            enumerable.ForEach((e, n) => 
             {
                 if (n == strCount - 1) combinedStr += e; else combinedStr += e + separator; 
             });
@@ -238,9 +266,9 @@ namespace AzUtil.Core
             if (string.IsNullOrEmpty(s)) return string.Empty;
             return char.ToUpper(s[0]) + s[1..];
         }
-        public static V ValueOrDefault<K,V>(this Dictionary<K,V> dict,K key)
+        public static TV ValueOrDefault<TK,TV>(this Dictionary<TK,TV> dict,TK key)
         {
-            if (dict.TryGetValue(key, out V value)) return value;
+            if (dict.TryGetValue(key, out TV value)) return value;
             else return default;
         }
 
@@ -368,25 +396,25 @@ namespace AzUtil.Core
             if (Enum.TryParse(s, out T myEnum)) return myEnum; else return valueIfError;
         }
 
-        public static string Last(this string S)
+        public static string Last(this string s)
         {
-            if (S.Length == 0) return "";
-            return S[^1..];
+            if (s.Length == 0) return "";
+            return s[^1..];
         }
-        public static void AddIfExist(this List<string> Strings, string Entry)
+        public static void AddIfExist(this List<string> strings, string entry)
         {
-            if (!Strings.Exists(S => string.Equals(S, Entry, StringComparison.InvariantCultureIgnoreCase))) Strings.Add(Entry);
+            if (!strings.Exists(s => string.Equals(s, entry, StringComparison.InvariantCultureIgnoreCase))) strings.Add(entry);
         }
-        public static void AddIfNotExist(this List<string> Strings, string Entry, out bool AlreadyExists)
+        public static void AddIfNotExist(this List<string> strings, string entry, out bool alreadyExists)
         {
-            AlreadyExists = false;
-            string entry = Entry.Trim();
-            if (!Strings.Exists(S => string.Equals(S, entry, StringComparison.InvariantCultureIgnoreCase))) Strings.Add(entry.ToLower()); else AlreadyExists = true;
+            alreadyExists = false;
+            string entryTrimmed = entry.Trim();
+            if (!strings.Exists(s => string.Equals(s, entryTrimmed, StringComparison.InvariantCultureIgnoreCase))) strings.Add(entryTrimmed.ToLower()); else alreadyExists = true;
         }
-        public static bool IfExist(this List<string> Strings, string Entry)
+        public static bool IfExist(this List<string> strings, string entry)
         {
-            string entry = Entry.Trim();
-            return Strings.Exists(S => string.Equals(S, entry, StringComparison.InvariantCultureIgnoreCase));
+            string entryTrim = entry.Trim();
+            return strings.Exists(s => string.Equals(s, entryTrim, StringComparison.InvariantCultureIgnoreCase));
         }
         public static string RemoveDiacritics(this string text)
         {
@@ -401,15 +429,15 @@ namespace AzUtil.Core
         }
         public static string ToSha256(this string input)
         {
-            StringBuilder Sb = new StringBuilder();
+            StringBuilder sb = new StringBuilder();
 
             using (var sha = System.Security.Cryptography.SHA256.Create())
             {
                 var bytes = Encoding.UTF8.GetBytes(input);
                 var hash = sha.ComputeHash(bytes);
-                foreach (Byte b in hash) Sb.Append(b.ToString("x2"));
+                foreach (Byte b in hash) sb.Append(b.ToString("x2"));
             }
-            return Sb.ToString();
+            return sb.ToString();
 
         }
 
@@ -417,12 +445,12 @@ namespace AzUtil.Core
         {
             try
             {
-                if (value is string S)
+                if (value is string s)
                 {
-                    if (string.IsNullOrWhiteSpace(S)) return null;
-                    string SL = S.ToLower();
-                    if (S == "0" || SL == "false" || SL == "off" || SL == "close" || SL == "no" || SL=="n" || SL=="f" || SL == "✓") return false;
-                    if (S == "1" || SL == "true" || SL == "on" || SL == "open" || SL == "yes" || SL=="y" || SL=="t" || SL == "ok" || SL == "✕") return true;
+                    if (string.IsNullOrWhiteSpace(s)) return null;
+                    string sl = s.ToLower();
+                    if (s == "0" || sl == "false" || sl == "off" || sl == "close" || sl == "no" || sl=="n" || sl=="f" || sl == "✓") return false;
+                    if (s == "1" || sl == "true" || sl == "on" || sl == "open" || sl == "yes" || sl=="y" || sl=="t" || sl == "ok" || sl == "✕") return true;
                     return null;
                 }
                 else if (value is bool b) return b;
@@ -448,25 +476,25 @@ namespace AzUtil.Core
             string firstWord = fullName.ToFirstWord();
             if (firstWord.Count() <= 3) return fullName.ToFirst2Words(); else return firstWord;
         }
-        public static bool ToBool(this object value, bool ValueIfError = false, bool? ValueIfNotAString = null)
+        public static bool ToBool(this object value, bool valueIfError = false, bool? valueIfNotAString = null)
         {
             try
             {
-                if (value is string S)
+                if (value is string s)
                 {
-                    if (string.IsNullOrWhiteSpace(S)) return ValueIfError;
-                    string SL = S.ToLower();
-                    if (S == "0" || SL == "false" || SL == "off" || SL == "close" || SL == "no" || SL == "n" || SL == "f" || SL == "✕") return false;
-                    if (S == "1" || SL == "true" || SL == "on" || SL == "open" || SL == "yes" || SL == "y" || SL == "t" || SL == "ok" || SL == "✓") return true;
-                    return ValueIfError;
+                    if (string.IsNullOrWhiteSpace(s)) return valueIfError;
+                    string sl = s.ToLower();
+                    if (s == "0" || sl == "false" || sl == "off" || sl == "close" || sl == "no" || sl == "n" || sl == "f" || sl == "✕") return false;
+                    if (s == "1" || sl == "true" || sl == "on" || sl == "open" || sl == "yes" || sl == "y" || sl == "t" || sl == "ok" || sl == "✓") return true;
+                    return valueIfError;
                 }
                 else
                 {
-                    if (ValueIfNotAString == null) return Convert.ToBoolean(value);
-                    else return ValueIfNotAString ?? false;
+                    if (valueIfNotAString == null) return Convert.ToBoolean(value);
+                    else return (bool) valueIfNotAString;
                 }
             }
-            catch { return ValueIfError; }
+            catch { return valueIfError; }
         }
         [DebuggerStepThrough]
         public static bool CompareWithOrderedDiff<T1,T2>(this IList<T1> aList, IList<T2> bList, Func<T1, T2, bool> comparingFunction)
@@ -626,64 +654,65 @@ namespace AzUtil.Core
             return elements.GroupBy(_ => keyValue).FirstOrDefault();
         }
 
-        public static string ToSeparatedString(this IEnumerable<string> src, string Separator = ",")
+        public static string ToSeparatedString(this IEnumerable<string> src, string separator = ",")
         {
             string output = null;
-            int srcCount = src.Count();
+            var enumerable = src as string[] ?? src.ToArray();
+            int srcCount = enumerable.Count();
             int i = 1;
-            foreach (var e in src)
+            foreach (var e in enumerable)
             {
-                if (i == srcCount) output += e; else output += e + Separator;
+                if (i == srcCount) output += e; else output += e + separator;
                 i++;
             }
             return output;
         }
-        public static DateTime? ToDateTimeNull(this object value, bool IfTimeZoneNotSpecifiedAssumeUTC = true, DateTime? valueIfFail = null)
+        public static DateTime? ToDateTimeNull(this object value, bool ifTimeZoneNotSpecifiedAssumeUtc = true, DateTime? valueIfFail = null)
         {
             try
             {
                 if (value == null || value == DBNull.Value) return null; 
-                if (value is string TSStr) return StringToDT(TSStr, IfTimeZoneNotSpecifiedAssumeUTC); else return Convert.ToDateTime(value);
+                if (value is string tsStr) return StringToDt(tsStr, ifTimeZoneNotSpecifiedAssumeUtc); else return Convert.ToDateTime(value);
             }
             catch { return valueIfFail; }
         }
-        public static DateTime ToDateTime(this object value, bool IfTimeZoneNotSpecifiedAssumeUTC = true, DateTime? ValueIfFail = null)
+        public static DateTime ToDateTime(this object value, bool ifTimeZoneNotSpecifiedAssumeUtc = true, DateTime? valueIfFail = null)
         {
-            try { if (value is string TSStr) return StringToDT(TSStr, IfTimeZoneNotSpecifiedAssumeUTC); else return Convert.ToDateTime(value); }
-            catch { return ValueIfFail ?? DateTime.MinValue; }
+            try { if (value is string tsStr) return StringToDt(tsStr, ifTimeZoneNotSpecifiedAssumeUtc); else return Convert.ToDateTime(value); }
+            catch { return valueIfFail ?? DateTime.MinValue; }
         }
-        private static DateTime StringToDT(string TSStr, bool IfTimeZoneNotSpecifiedAssumeUTC = true)
+        private static DateTime StringToDt(string tsStr, bool ifTimeZoneNotSpecifiedAssumeUtc = true)
         {
-            if (DateTime.TryParseExact(TSStr, new string[] { "yyyy-MM-dd HH:mm:ss.fff", "yyyy-MM-dd HH:mm:ss", "yyyy-MM-dd HH:mm", "yyyy-M-d H:m:s", "yyyy-M-d HH:m:s.f" },
-                            System.Globalization.CultureInfo.InvariantCulture, IfTimeZoneNotSpecifiedAssumeUTC ? DateTimeStyles.AssumeUniversal : DateTimeStyles.AssumeLocal, out DateTime DT))
-            { if (IfTimeZoneNotSpecifiedAssumeUTC) DT = DT.ToUniversalTime(); }
-            else DateTime.TryParse(TSStr, null, IfTimeZoneNotSpecifiedAssumeUTC? DateTimeStyles.AssumeUniversal : DateTimeStyles.RoundtripKind, out DT); //This handles ECMA ISO8601 Date Format
-            return DT;
+            if (DateTime.TryParseExact(tsStr, new[] { "yyyy-MM-dd HH:mm:ss.fff", "yyyy-MM-dd HH:mm:ss", "yyyy-MM-dd HH:mm", "yyyy-M-d H:m:s", "yyyy-M-d HH:m:s.f" },
+                            CultureInfo.InvariantCulture, ifTimeZoneNotSpecifiedAssumeUtc ? DateTimeStyles.AssumeUniversal : DateTimeStyles.AssumeLocal, out DateTime dt))
+            { if (ifTimeZoneNotSpecifiedAssumeUtc) dt = dt.ToUniversalTime(); }
+            else DateTime.TryParse(tsStr, null, ifTimeZoneNotSpecifiedAssumeUtc? DateTimeStyles.AssumeUniversal : DateTimeStyles.RoundtripKind, out dt); //This handles ECMA ISO8601 Date Format
+            return dt;
         }
         public static Single ToSingle(this object value)
         {
             try { return Convert.ToSingle(value); }
-            catch { return (Single)0;}
+            catch { return 0;}
         }
         public static Double ToDouble(this object value)
         {
             try { return Convert.ToDouble(value); }
-            catch { return (Double)0; }
+            catch { return 0; }
         }
-        public static long ToLong(this object value, Int64 DefaultValueIfError = 0)
+        public static long ToLong(this object value, Int64 defaultValueIfError = 0)
         {
             try { return Convert.ToInt64(value); }
-            catch { return DefaultValueIfError;  }
+            catch { return defaultValueIfError;  }
         }
         public static Byte ToByte(this object value)
         {
             try { return Convert.ToByte(value); }
-            catch { return (Byte)0; }
+            catch { return 0; }
         }
         public static ushort ToUShort(this object value)
         {
             try { return Convert.ToUInt16(value); }
-            catch { return (ushort)0; }
+            catch { return 0; }
         }
         public static Char ToChar(this object value)
         {
@@ -696,30 +725,30 @@ namespace AzUtil.Core
             try { return Convert.ToInt32(value); }
             catch { return null; }
         }
-        public static Int16 ToInt16(this object value, Int16 ValueIfError = 0)
+        public static Int16 ToInt16(this object value, Int16 valueIfError = 0)
         {
             try { return Convert.ToInt16(value); }
-            catch { return ValueIfError; }
+            catch { return valueIfError; }
         }
-        public static Int64 ToInt64(this object value, Int64 ValueIfError = 0)
+        public static Int64 ToInt64(this object value, Int64 valueIfError = 0)
         {
             try { return Convert.ToInt64(value); }
-            catch { return ValueIfError;}
+            catch { return valueIfError;}
         }
-        public static uint ToUint(this object value, uint ValueIfError = 0)
+        public static uint ToUint(this object value, uint valueIfError = 0)
         {
             try { return Convert.ToUInt32(value); }
-            catch { return ValueIfError; }
+            catch { return valueIfError; }
         }
-        public static UInt16 ToUint16(this object value, UInt16 ValueIfError = 0)
+        public static UInt16 ToUint16(this object value, UInt16 valueIfError = 0)
         {
             try { return Convert.ToUInt16(value); }
-            catch { return ValueIfError; }
+            catch { return valueIfError; }
         }
-        public static UInt64 ToUint64(this object value, UInt64 ValueIfError = 0)
+        public static UInt64 ToUint64(this object value, UInt64 valueIfError = 0)
         {
             try { return Convert.ToUInt64(value); }
-            catch { return ValueIfError; }
+            catch { return valueIfError; }
         }
         public static double Round(this double value)
         {
@@ -729,11 +758,11 @@ namespace AzUtil.Core
         {
             return Math.Round(value);
         }
-        public static int ToInt(this object value, int ValueIfFail = 0)
+        public static int ToInt(this object value, int valueIfFail = 0)
         {
-            if (value == null || value == DBNull.Value) return ValueIfFail;
+            if (value == null || value == DBNull.Value) return valueIfFail;
             try { return Convert.ToInt32(value); }
-            catch { return ValueIfFail; }
+            catch { return valueIfFail; }
         }
 
         //public static FindInStringResult FindFirstWordThatStartsWith(this string str, string startsWith, int maxExtractClippedLength)
@@ -774,23 +803,21 @@ namespace AzUtil.Core
             matchingCharIndex = -1;
             return false;
         }
-        public static string ReplaceRegex(this string input, string pattern, string replaceWith, RegexOptions regexOptions = RegexOptions.IgnoreCase)
+        public static string ReplaceRegex(this string input, string pattern, string replaceWith, RegexOptions options = RegexOptions.IgnoreCase)
         {
-            return Regex.Replace(input, pattern, replaceWith, regexOptions);
+            return Regex.Replace(input, pattern, replaceWith, options);
         }
 
-        static readonly char[] wordSeparators = new char[] { ' ', ',',':','=','\"','\'','-','?',';','=' };
+        static readonly char[] regexWordSeparators = new char[] { ' ', ',',':','=','\"','\'','-','?',';','=' };
         public static FindStringsResult FindStrings(this string str, string stringToFind, StringComparison stringComparison = StringComparison.CurrentCultureIgnoreCase)
         {
             List<FindStringMatch> matches = new List<FindStringMatch>();
-            string[] stringsToFind = stringToFind.Split(new char[] { ' ', ',' },StringSplitOptions.RemoveEmptyEntries);
+            string[] stringsToFind = stringToFind.Split(new[] { ' ', ',' },StringSplitOptions.RemoveEmptyEntries);
 
-            int n = -1;
             for (int n2=0; n2< stringsToFind.Count(); n2++) // Go through every word to find in String
             {
                 if (stringsToFind[n2].IsNullOrEmpty()) continue;
                 string toFind = stringsToFind[n2];
-                n++;
                 bool noMoreResults = false;
                 FindStringMatch currentMatch = null;
                 int strToProcessStartPos = 0;
@@ -805,7 +832,6 @@ namespace AzUtil.Core
                         int endPos = startPos + toFind.Length;
                         bool isStartOfSentence = false;
                         bool isStartOfWord = false;
-                        char startOfWordSeparator = ' ';
                         int matchScore = 1; //a match anywhere in the string
                         if (startPos == 0)
                         {
@@ -814,12 +840,11 @@ namespace AzUtil.Core
                         }
                         else
                         {
-                            int wSC = wordSeparators.Count();
-                            if (str[startPos - 1].HasChar(wordSeparators, out int matchingCharIndex)) //if occur at start of word
+                            int wSc = regexWordSeparators.Count();
+                            if (str[startPos - 1].HasChar(regexWordSeparators, out int matchingCharIndex)) //if occur at start of word
                             {
                                 isStartOfWord = true;
-                                startOfWordSeparator = wordSeparators[matchingCharIndex];
-                                matchScore = 100 + (wSC - matchingCharIndex);
+                                matchScore = 100 + (wSc - matchingCharIndex);
                             }
                             else //if occur at centre of word
                             {
@@ -831,9 +856,9 @@ namespace AzUtil.Core
                                 }
                             }
                         }
-                        bool isFullWordMatch = endPos>=str.Length || str[endPos].HasChar(wordSeparators, out _);
-                        FindStringMatch newMatch = new FindStringMatch(startPos, endPos, toFind, isStartOfSentence, 
-                            isStartOfWord, isFullWordMatch, startOfWordSeparator, matchScore);
+                        
+                        FindStringMatch newMatch = new FindStringMatch(startPos, endPos, isStartOfSentence, 
+                            isStartOfWord, matchScore);
                         strToProcess = str[newMatch.EndPos..];
                         strToProcessStartPos = newMatch.EndPos;
                         if (strToProcess.IsNullOrEmpty()) noMoreResults = true;
@@ -894,7 +919,7 @@ namespace AzUtil.Core
                             if (matches[n3].EndPos == (matches[n3+1].StartPos-1))
                             {
                                 var charAtPos = str[matches[n3 + 1].StartPos - 1];
-                                if (charAtPos.HasChar(new Char[] {' ',',','-' }, out _))
+                                if (charAtPos.HasChar(new[] {' ',',','-' }, out _))
                                 {
                                     matches[n3].MatchScore = matches[n3].MatchScore * 2;
                                 }
@@ -919,51 +944,6 @@ namespace AzUtil.Core
                 }
             }
             return new FindStringsResult(matches.Count > 0, matches.ToArray(),resParts.ToArray());
-        }
-        public static FindInStringResult FindInString(this string str, string toFind, int maxExtractClippedLength = -1)
-        {
-            var index = str.IndexOf(toFind, StringComparison.CurrentCultureIgnoreCase);
-            if (index != -1)
-            {
-                if (maxExtractClippedLength == -1)
-                {
-                    int endPos = index + toFind.Length;
-                    return new FindInStringResult(true, str, 0, index, endPos,
-                        str[0..index],
-                        str[index..endPos],
-                        str[endPos..], str);
-                }
-                else
-                {
-                    int strLastIndex = str.Length - 1;
-                    int halfPortion = (maxExtractClippedLength - toFind.Length) / 2;
-                    if (halfPortion < 0) halfPortion = 0;
-                    int clipStartIndex = index - halfPortion;
-                    int clipLength;
-                    if (clipStartIndex < 0) clipStartIndex = 0;
-                    if (clipStartIndex + maxExtractClippedLength > str.Length)
-                    {
-                        clipStartIndex -= (maxExtractClippedLength + clipStartIndex - str.Length);
-                        if (clipStartIndex < 0) clipStartIndex = 0;
-                        clipLength = strLastIndex - clipStartIndex + 1;
-                    }
-                    else
-                    {
-                        clipLength = maxExtractClippedLength; // halfPortion + halfPortion + toFind.Length + (maxExtractClippedLength % 2);
-                        if (clipStartIndex + clipLength > str.Length) clipLength = str.Length - clipStartIndex;
-                    }
-                    if (clipLength > maxExtractClippedLength)
-                    {
-                        clipLength = maxExtractClippedLength;
-                    }
-                    string extract = str.Substring(clipStartIndex, clipLength);
-                    if (toFind.Length > extract.Length) toFind = toFind.Substring(0, extract.Length);
-                    int extractStartIndex = extract.IndexOf(toFind, StringComparison.CurrentCultureIgnoreCase);
-                    int endPos = extractStartIndex + toFind.Length;
-                    return new FindInStringResult(true, extract, clipStartIndex, extractStartIndex, endPos, extract[0..extractStartIndex], extract[extractStartIndex..endPos], extract[endPos..], str);
-                }
-            }
-            else return new FindInStringResult(false, null, -1, -1, -1, null, null, null, str);
         }
 
         public static double Clamp(this double self, double min, double max)
@@ -1034,56 +1014,30 @@ namespace AzUtil.Core
             }
         }
         public bool Success { get; set; }
-        public int MatchScore { get; set; } = 0;
+        public int MatchScore { get; set; }
         public FindStringResultPart[] Parts { get; set; }
         public FindStringMatch[] Matches { get; set; }        
     }
     public class FindStringMatch
     {
-        public FindStringMatch(int startPos, int endPos, string match, bool isStartOfSentence = false, bool isStartOfWord = false, bool isFullWordMatch = false, char startOfWordSeparator=' ', int matchScore = 0)
+        public FindStringMatch(int startPos, int endPos, bool isStartOfSentence = false,
+            bool isStartOfWord = false,
+            int matchScore = 0)
         {
             StartPos = startPos;
             EndPos = endPos;
-            Match = match;
             IsStartOfWord = isStartOfWord;
-            IsFullWordMatch = isFullWordMatch;
-            StartOfWordSeparator = startOfWordSeparator;
             MatchScore = matchScore;
             IsStartOfSentence = isStartOfSentence;
         }
         public int StartPos { get; set; }
         public int EndPos { get; set; }
-        public string Match { get; set; }
         public bool IsStartOfSentence { get; set; }
         public bool IsStartOfWord { get; set; }
-        public bool IsFullWordMatch { get; set; }
-        public char StartOfWordSeparator { get; set; }
         public int MatchScore { get; set; }
     }
 
     public class FindInStringResult
     {
-        public FindInStringResult(bool found, string extractedString, int extractStartIndex, int startPos, int endPos, string leftOfFoundString, string foundString, string rightOfFoundString, string searchedStr)
-        {
-            SearchedString = searchedStr;
-            Found = found;
-            ExtractStartIndex = extractStartIndex;
-            StartPos = startPos;
-            EndPos = endPos;
-            LeftOfFoundString = leftOfFoundString;
-            FoundString = foundString;
-            RightOfFoundString = rightOfFoundString;
-            ExtractedString = extractedString;
-        }
-
-        public bool Found { get; private set; } = true;
-        public int ExtractStartIndex { get; private set; } = -1;
-        public int StartPos { get; private set; } = -1;
-        public int EndPos { get; private set; } = -1;
-        public string SearchedString { get; private set; } = null;
-        public string ExtractedString { get; private set; } = null;
-        public string LeftOfFoundString { get; set; } = null;
-        public string FoundString { get; private set; } = null;
-        public string RightOfFoundString { get; set; } = null;
     }
 }

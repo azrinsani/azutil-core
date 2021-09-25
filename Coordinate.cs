@@ -2,6 +2,7 @@
 
 namespace AzUtil.Core
 {
+
     public struct Coordinate : IEquatable<Coordinate>
     {
         public Coordinate(double latitude, double longitude, bool isUnknown = false)
