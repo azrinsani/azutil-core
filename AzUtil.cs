@@ -3,6 +3,7 @@ using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -23,7 +24,38 @@ namespace AzUtil.Core
     {
         public static int MySQLTimeout = 0;
 
-        
+        public static string RunCommand(string arguments, string workingDirectory, bool showWindow = true)
+        {
+            var output = string.Empty;
+            try
+            {
+                var startInfo = new ProcessStartInfo()
+                {
+                    Verb = "runas",
+                    FileName = "cmd.exe",
+                    Arguments = "/C "+arguments,
+                    WindowStyle = showWindow? ProcessWindowStyle.Normal: ProcessWindowStyle.Hidden,
+                    UseShellExecute = false,
+                    WorkingDirectory = workingDirectory,
+                    CreateNoWindow = !showWindow,
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = false
+                };
+
+                var proc = Process.Start(startInfo);
+
+                output = proc.StandardOutput.ReadToEnd();
+
+                proc.WaitForExit(60000);
+
+                return output;
+            }
+            catch (Exception)
+            {
+                return output;
+            }
+        }
+
 
         public async Task SendMail(SMTPSettings sMTP)
         {

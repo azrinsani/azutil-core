@@ -477,6 +477,21 @@ namespace azutil_core
             string firstWord = fullName.ToFirstWord();
             if (firstWord.Count() <= 3) return fullName.ToFirst2Words(); else return firstWord;
         }
+        
+        public static bool? ToBoolNull(this object value)
+        {
+            try
+            {
+                if (value is string s && !s.IsNullOrWhiteSpace())
+                {
+                    string sl = s.ToLower();
+                    if (s == "0" || sl == "false" || sl == "off" || sl == "close" || sl == "no" || sl == "n" || sl == "f" || sl == "✕") return false;
+                    if (s == "1" || sl == "true" || sl == "on" || sl == "open" || sl == "yes" || sl == "y" || sl == "t" || sl == "ok" || sl == "✓") return true;
+                }
+            }
+            catch { }
+            return null;
+        }
         public static bool ToBool(this object value, bool valueIfError = false, bool? valueIfNotAString = null)
         {
             try
