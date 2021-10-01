@@ -26,8 +26,8 @@ namespace azutil_core
             {
                 try
                 {
-                    Uri uri = new Uri("http://api.ipify.org");
-                    HttpResponseMessage response = await httpClient.GetAsync(uri);
+                    var uri = new Uri("http://api.ipify.org");
+                    var response = await httpClient.GetAsync(uri);
                     if (response.IsSuccessStatusCode)
                     {
                         ip = await response.Content.ReadAsStringAsync();
@@ -40,7 +40,7 @@ namespace azutil_core
                 }
 
             }
-            string url = "http://api.ipstack.com/" + ip + "?access_key=71703c2a662e2a6afecc0ee7e565d356";
+            var url = "http://api.ipstack.com/" + ip + "?access_key=71703c2a662e2a6afecc0ee7e565d356";
             try
             {
                 Uri uri = new Uri(string.Format(url, string.Empty));
@@ -94,12 +94,7 @@ namespace azutil_core
         }
         public static TVal GetValueOrDefault<TKey,TVal>(this Dictionary<TKey,TVal> dict, TKey key)
         {
-            if (dict.TryGetValue(key, out TVal val))
-            {
-                return val;
-            }
-            else return default;
-
+            return dict.TryGetValue(key, out var val) ? val : default;
         }
         public static Color ToColor(this string colorHex, Color colorIfEmpty)
         {
@@ -182,8 +177,7 @@ namespace azutil_core
         public static string RemoveLastCrlnIfExist(this string source)
         {
             if (source.Length <= 2) return source;
-            if (source[^2..] == "\r\n") return source.Remove(source.Length - 2);
-            else return source;
+            return source[^2..] == "\r\n" ? source.Remove(source.Length - 2) : source;
         }
         public static string RegexRemove(this string source, Regex regex, out Collection<string> removed)
         {
@@ -431,7 +425,7 @@ namespace azutil_core
         }
         public static string ToSha256(this string input)
         {
-            StringBuilder sb = new StringBuilder();
+            var sb = new StringBuilder();
 
             using (var sha = System.Security.Cryptography.SHA256.Create())
             {
@@ -447,21 +441,32 @@ namespace azutil_core
         {
             try
             {
-                if (value is string s)
+                switch (value)
                 {
-                    if (string.IsNullOrWhiteSpace(s)) return null;
-                    string sl = s.ToLower();
-                    if (s == "0" || sl == "false" || sl == "off" || sl == "close" || sl == "no" || sl=="n" || sl=="f" || sl == "✓") return false;
-                    if (s == "1" || sl == "true" || sl == "on" || sl == "open" || sl == "yes" || sl=="y" || sl=="t" || sl == "ok" || sl == "✕") return true;
-                    return null;
+                    case string s when string.IsNullOrWhiteSpace(s):
+                        return null;
+                    case string s:
+                    {
+                        string sl = s.ToLower();
+                        if (s == "0" || sl == "false" || sl == "off" || sl == "close" || sl == "no" || sl=="n" || sl=="f" || sl == "✓") return false;
+                        if (s == "1" || sl == "true" || sl == "on" || sl == "open" || sl == "yes" || sl=="y" || sl=="t" || sl == "ok" || sl == "✕") return true;
+                        return null;
+                    }
+                    case bool b:
+                        return b;
+                    case int v1:
+                        return (v1 > 0);
+                    case double v2:
+                        return (v2 > 0);
+                    case uint v3:
+                        return (v3 > 0);
+                    case float v4:
+                        return (v4 > 0);
+                    case decimal v5:
+                        return (v5 > 0);
+                    default:
+                        return null;
                 }
-                else if (value is bool b) return b;
-                else if (value is int v1) return (v1 > 0);
-                else if (value is double v2) return (v2 > 0);
-                else if (value is uint v3) return (v3 > 0);
-                else if (value is float v4) return (v4 > 0);
-                else if (value is decimal v5) return (v5 > 0);
-                else return null;
             }
             catch { return null; }
         }
@@ -475,8 +480,8 @@ namespace azutil_core
         }
         public static string ToFriendlyName(this string fullName)
         {
-            string firstWord = fullName.ToFirstWord();
-            if (firstWord.Count() <= 3) return fullName.ToFirst2Words(); else return firstWord;
+            var firstWord = fullName.ToFirstWord();
+            return firstWord.Count() <= 3 ? fullName.ToFirst2Words() : firstWord;
         }
         
         public static bool? ToBoolNull(this object value)
@@ -485,12 +490,16 @@ namespace azutil_core
             {
                 if (value is string s && !s.IsNullOrWhiteSpace())
                 {
-                    string sl = s.ToLower();
+                    var sl = s.ToLower();
                     if (s == "0" || sl == "false" || sl == "off" || sl == "close" || sl == "no" || sl == "n" || sl == "f" || sl == "✕") return false;
                     if (s == "1" || sl == "true" || sl == "on" || sl == "open" || sl == "yes" || sl == "y" || sl == "t" || sl == "ok" || sl == "✓") return true;
                 }
             }
-            catch { }
+            catch
+            {
+                // ignored
+            }
+
             return null;
         }
         public static bool ToBool(this object value, bool valueIfError = false, bool? valueIfNotAString = null)
@@ -811,11 +820,9 @@ namespace azutil_core
         {
             for (int n=0; n< toMatchChars.Count(); n++)
             {
-                if (c == toMatchChars[n])
-                {
-                    matchingCharIndex = n;
-                    return true;
-                }
+                if (c != toMatchChars[n]) continue;
+                matchingCharIndex = n;
+                return true;
             }
             matchingCharIndex = -1;
             return false;
@@ -1030,10 +1037,10 @@ namespace azutil_core
                 MatchScore += match.MatchScore;
             }
         }
-        public bool Success { get; set; }
-        public int MatchScore { get; set; }
-        public FindStringResultPart[] Parts { get; set; }
-        public FindStringMatch[] Matches { get; set; }        
+        public bool Success { get; }
+        public int MatchScore { get;  }
+        public FindStringResultPart[] Parts { get; }
+        public FindStringMatch[] Matches { get; }        
     }
     public class FindStringMatch
     {
@@ -1047,14 +1054,10 @@ namespace azutil_core
             MatchScore = matchScore;
             IsStartOfSentence = isStartOfSentence;
         }
-        public int StartPos { get; set; }
-        public int EndPos { get; set; }
-        public bool IsStartOfSentence { get; set; }
-        public bool IsStartOfWord { get; set; }
+        public int StartPos { get; }
+        public int EndPos { get; }
+        public bool IsStartOfSentence { get; }
+        public bool IsStartOfWord { get;  }
         public int MatchScore { get; set; }
-    }
-
-    public class FindInStringResult
-    {
     }
 }
