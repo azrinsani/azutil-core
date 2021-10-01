@@ -5,7 +5,7 @@ using azutil_core;
 
 namespace AzUtil.Core
 {
-    public struct Color
+    public readonly struct Color
 	{
 		readonly Mode _mode;
 
@@ -16,67 +16,40 @@ namespace AzUtil.Core
 			Hsl
 		}
 
-		public static Color Default
-		{
-			get { return new Color(-1d, -1d, -1d, -1d, Mode.Default); }
-		}
+		public static Color Default => new Color(-1d, -1d, -1d, -1d, Mode.Default);
 
-		public bool IsDefault
-		{
-			get { return _mode == Mode.Default; }
-		}
+		public bool IsDefault => _mode == Mode.Default;
 
 		public static void SetAccent(Color value) => Accent = value;
-		public static Color Accent { get; internal set; }
+		public static Color Accent { get; private set; }
 
-		readonly float _a;
+		private readonly float _a;
 
-		public double A
-		{
-			get { return _a; }
-		}
+		public double A => _a;
 
-		readonly float _r;
+		private readonly float _r;
 
-		public double R
-		{
-			get { return _r; }
-		}
+		public double R => _r;
 
-		readonly float _g;
+		private readonly float _g;
 
-		public double G
-		{
-			get { return _g; }
-		}
+		public double G => _g;
 
-		readonly float _b;
+		private readonly float _b;
 
-		public double B
-		{
-			get { return _b; }
-		}
+		public double B => _b;
 
-		readonly float _hue;
+		private readonly float _hue;
 
-		public double Hue
-		{
-			get { return _hue; }
-		}
+		public double Hue => _hue;
 
-		readonly float _saturation;
+		private readonly float _saturation;
 
-		public double Saturation
-		{
-			get { return _saturation; }
-		}
+		public double Saturation => _saturation;
 
-		readonly float _luminosity;
+		private readonly float _luminosity;
 
-		public double Luminosity
-		{
-			get { return _luminosity; }
-		}
+		public double Luminosity => _luminosity;
 
 		public Color(double r, double g, double b, double a) : this(r, g, b, a, Mode.Rgb)
 		{
