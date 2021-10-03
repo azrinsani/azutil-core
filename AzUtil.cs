@@ -9,6 +9,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.Mail;
+using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 
 namespace AzUtil.Core
@@ -56,7 +57,10 @@ namespace AzUtil.Core
             }
         }
 
-
+        public static string LogDirectory => RuntimeInformation.IsOSPlatform(OSPlatform.OSX) ? 
+            Path.Combine("~", "Library", "Logs") : 
+            Path.Combine(RuntimeInformation.IsOSPlatform(OSPlatform.Linux) ? 
+                "var" : Directory.GetCurrentDirectory(), "log");
         public async Task SendMail(SMTPSettings sMTP)
         {
             SmtpClient client = new SmtpClient(sMTP.Host, sMTP.Port)
