@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 
 namespace AzUtil.Core
 {
@@ -6,6 +7,17 @@ namespace AzUtil.Core
     public static class World
     {
         public static Country Default => new Country(null, OptIn.Single, OptIn.Single, true, true);
+
+        public static bool RequireSmsOptInConsent(string countryCode)
+        {
+            if (!World.Countries.TryGetValue(countryCode, out Country country)) country = Default;
+            return (country.SMS != OptIn.No);
+        }
+        public static bool RequireEmailOptInConsent(string countryCode)
+        {
+            if (!World.Countries.TryGetValue(countryCode, out Country country)) country = Default;
+            return (country.Email != OptIn.No);
+        }
         public static Dictionary<string, Country> Countries =>
             new Dictionary<string, Country>()
             {

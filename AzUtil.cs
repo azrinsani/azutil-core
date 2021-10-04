@@ -58,7 +58,7 @@ namespace AzUtil.Core
         }
 
         public static string LogDirectory => RuntimeInformation.IsOSPlatform(OSPlatform.OSX) ? 
-            Path.Combine("~", "Library", "Logs") : 
+            Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Library", "Logs") : 
             Path.Combine(RuntimeInformation.IsOSPlatform(OSPlatform.Linux) ? 
                 "var" : Directory.GetCurrentDirectory(), "log");
         public async Task SendMail(SMTPSettings sMTP)

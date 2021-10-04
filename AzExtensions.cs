@@ -198,6 +198,23 @@ namespace azutil_core
             if (source.Length > length) return source.Substring(0, length) + "..";
             else return source;
         }
+
+        public static ICollection<T> RemoveRange<T>(this ICollection<T> source, IEnumerable<T> toRemoves)
+        {
+            foreach (var toRemove in toRemoves)
+            {
+                source.Remove(toRemove);
+            }
+            return source;
+        }
+        public static ICollection<T> AddRange<T>(this ICollection<T> source, IEnumerable<T> toAdds)
+        {
+            foreach (var toAdd in toAdds)
+            {
+                source.Add(toAdd);
+            }
+            return source;
+        }
         public static Collection<T> ToCollection<T>(this IEnumerable<T> source)
         {
             var collection = new Collection<T>();
@@ -1007,6 +1024,17 @@ namespace azutil_core
         }
         [DebuggerStepThrough]
         public static bool IsNullOrEmpty(this string value) { return string.IsNullOrEmpty(value);}
+
+        [DebuggerStepThrough]
+        public static string ToNullIfEmpty(this string value)
+        {
+            return string.IsNullOrEmpty(value) ? null : value; 
+        }
+        [DebuggerStepThrough]
+        public static string ToNullIfWhiteSpace(this string value)
+        {
+            return string.IsNullOrWhiteSpace(value) ? null : value; 
+        }
         [DebuggerStepThrough]
         public static bool IsNullOrWhiteSpace(this string value) { return string.IsNullOrWhiteSpace(value); }
         [DebuggerStepThrough]
