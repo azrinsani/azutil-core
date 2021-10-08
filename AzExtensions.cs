@@ -5,12 +5,13 @@ using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Net.Http;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using AzUtil.Core;
-using Newtonsoft.Json.Linq;
+using Utf8Json;
 
 namespace azutil_core
 {
@@ -38,7 +39,6 @@ namespace azutil_core
                 {
                     return null;
                 }
-
             }
             var url = "http://api.ipstack.com/" + ip + "?access_key=71703c2a662e2a6afecc0ee7e565d356";
             try
@@ -48,11 +48,11 @@ namespace azutil_core
                 if (response.IsSuccessStatusCode)
                 {
                     string content = await response.Content.ReadAsStringAsync();
-                    JObject obj = JObject.Parse(content);
-                    string city = (string)obj["city"];
-                    string region = (string)obj["region_name"];
-                    string country = (string)obj["country_name"];
-                    string countryCode = (string)obj["country_code"];
+                    var json = JsonSerializer.Deserialize<dynamic>(content);
+                    string city = (string)json["city"];
+                    string region = (string)json["region_name"];
+                    string country = (string)json["country_name"];
+                    string countryCode = (string)json["country_code"];
                     return new IPLocation(city, region, country, countryCode);
                 }
                 else return null;
@@ -62,11 +62,27 @@ namespace azutil_core
                 return null;
             }
         }
+
+        public static T ToDeserializedObject<T>(this string jsonStr)
+        {
+            return JsonSerializer.Deserialize<T>(jsonStr);
+        }
+        
+        public static T ToDeserializedObject<T>(this byte[] jsonBytes)
+        {
+            return JsonSerializer.Deserialize<T>(jsonBytes);
+        }
+        public static string ToSerializedString<T>(this T obj)
+        {
+            var ba= JsonSerializer.Serialize<T>(obj);
+            return System.Text.Encoding.UTF8.GetString(ba, 0, ba.Length);
+        }
+        public static byte[] ToSerializedByteArray<T>(this T obj) => JsonSerializer.Serialize<T>(obj);
         public static bool HasDateOnly(this DateTime dateTime) => dateTime.Hour == 0 && dateTime.Minute == 0 && dateTime.Second == 0 && dateTime.Millisecond == 0;
         
         public static List<int> FindIndexes<T>(this IList<T> source, Func<T, bool> predicate)
         {
-            List<int> res = new List<int>();
+            var res = new List<int>();
             for (int n=0;n<source.Count;n++)
             {
                 if (predicate.Invoke(source[n])) res.Add(n);
@@ -1022,6 +1038,16 @@ namespace azutil_core
 
             return self;
         }
+
+        public static bool IsSuccess(this HttpStatusCode code)
+        {
+            int codeInt = (int) code;
+            return codeInt >= 200 & codeInt < 400;
+        }
+        
+      
+
+
         [DebuggerStepThrough]
         public static bool IsNullOrEmpty(this string value) { return string.IsNullOrEmpty(value);}
 
@@ -1041,51 +1067,5 @@ namespace azutil_core
         public static bool IsEmptyOrWhiteSpace(this string value) => value.All(char.IsWhiteSpace);
         [DebuggerStepThrough]
         public static string Right(this string value, int length) { return value[^length..]; }
-    }
-    public struct FindStringResultPart
-    {
-        public FindStringResultPart(string text, bool highlight = false)
-        {
-            this.Highlight = highlight;
-            this.Text = text;
-        }
-
-        public bool Highlight { get; set; } 
-        public string Text { get; set; }
-    }
-    public class FindStringsResult
-    {
-        public FindStringsResult(bool success, FindStringMatch[] matches, FindStringResultPart[] parts)
-        {
-            Success = success;
-            Matches = matches;
-            Parts = parts;
-            foreach (var match in Matches)
-            {
-                MatchScore += match.MatchScore;
-            }
-        }
-        public bool Success { get; }
-        public int MatchScore { get;  }
-        public FindStringResultPart[] Parts { get; }
-        public FindStringMatch[] Matches { get; }        
-    }
-    public class FindStringMatch
-    {
-        public FindStringMatch(int startPos, int endPos, bool isStartOfSentence = false,
-            bool isStartOfWord = false,
-            int matchScore = 0)
-        {
-            StartPos = startPos;
-            EndPos = endPos;
-            IsStartOfWord = isStartOfWord;
-            MatchScore = matchScore;
-            IsStartOfSentence = isStartOfSentence;
-        }
-        public int StartPos { get; }
-        public int EndPos { get; }
-        public bool IsStartOfSentence { get; }
-        public bool IsStartOfWord { get;  }
-        public int MatchScore { get; set; }
     }
 }
