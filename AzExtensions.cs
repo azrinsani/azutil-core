@@ -18,29 +18,36 @@ namespace azutil_core
     //the guardians of his tru
     public static class AzExtensions
     {
-        //test
-        //IP Location Provider is provided by ipstack.com. 
-        //I have registered it as azrinsani@gmail.com, pw: withips
-        public static async Task<IPLocation> GetLocationByIp(this HttpClient httpClient, string ip=null)
+        public static async Task<string> GetMyIp(this HttpClient httpClient)
         {
-            if (ip == null)
+            var services = new List<string>()
+                {
+                    "https://ipv4.icanhazip.com",
+                    "https://api.ipify.org",
+                    "https://ipinfo.io/ip",
+                    "https://checkip.amazonaws.com",
+                    "https://wtfismyip.com/text"
+                };
+            using var webclient = new WebClient();
+            foreach (var service in services)
             {
                 try
                 {
-                    var uri = new Uri("http://api.ipify.org");
-                    var response = await httpClient.GetAsync(uri);
-                    if (response.IsSuccessStatusCode)
-                    {
-                        ip = await response.Content.ReadAsStringAsync();
-                    }
-                    else return null;
+                    var response = await httpClient.GetAsync(service);
+                    if (response.IsSuccessStatusCode) return await response.Content.ReadAsStringAsync();
                 }
-                catch (Exception)
+                catch
                 {
-                    return null;
+                    // ignored
                 }
             }
-            var url = "http://api.ipstack.com/" + ip + "?access_key=71703c2a662e2a6afecc0ee7e565d356";
+            return null;
+        }
+
+        public static async Task<string> GetCountyCodeByIp(this HttpClient httpClient, string ip = null)
+        {
+            ip ??= await httpClient.GetMyIp();
+            var url = "https://api.iplocation.net/?ip=" + ip;
             try
             {
                 Uri uri = new Uri(string.Format(url, string.Empty));
@@ -49,20 +56,17 @@ namespace azutil_core
                 {
                     string content = await response.Content.ReadAsStringAsync();
                     var json = JsonSerializer.Deserialize<dynamic>(content);
-                    string city = (string)json["city"];
-                    string region = (string)json["region_name"];
-                    string country = (string)json["country_name"];
-                    string countryCode = (string)json["country_code"];
-                    return new IPLocation(city, region, country, countryCode);
+                    string country = (string)json["country_code2"];
+                    return country.ToLower();
                 }
-                else return null;
+                return null;
             }
             catch
             {
                 return null;
             }
         }
-
+        
         public static T ToDeserializedObject<T>(this string jsonStr)
         {
             return JsonSerializer.Deserialize<T>(jsonStr);
@@ -74,10 +78,10 @@ namespace azutil_core
         }
         public static string ToSerializedString<T>(this T obj)
         {
-            var ba= JsonSerializer.Serialize<T>(obj);
-            return System.Text.Encoding.UTF8.GetString(ba, 0, ba.Length);
+            var ba= JsonSerializer.Serialize(obj);
+            return Encoding.UTF8.GetString(ba, 0, ba.Length);
         }
-        public static byte[] ToSerializedByteArray<T>(this T obj) => JsonSerializer.Serialize<T>(obj);
+        public static byte[] ToSerializedByteArray<T>(this T obj) => JsonSerializer.Serialize(obj);
         public static bool HasDateOnly(this DateTime dateTime) => dateTime.Hour == 0 && dateTime.Minute == 0 && dateTime.Second == 0 && dateTime.Millisecond == 0;
         
         public static List<int> FindIndexes<T>(this IList<T> source, Func<T, bool> predicate)
@@ -865,7 +869,7 @@ namespace azutil_core
             return Regex.Replace(input, pattern, replaceWith, options);
         }
 
-        static readonly char[] regexWordSeparators = new char[] { ' ', ',',':','=','\"','\'','-','?',';','=' };
+        static readonly char[] RegexWordSeparators = new char[] { ' ', ',',':','=','\"','\'','-','?',';','=' };
         public static FindStringsResult FindStrings(this string str, string stringToFind, StringComparison stringComparison = StringComparison.CurrentCultureIgnoreCase)
         {
             List<FindStringMatch> matches = new List<FindStringMatch>();
@@ -897,8 +901,8 @@ namespace azutil_core
                         }
                         else
                         {
-                            int wSc = regexWordSeparators.Count();
-                            if (str[startPos - 1].HasChar(regexWordSeparators, out int matchingCharIndex)) //if occur at start of word
+                            int wSc = RegexWordSeparators.Count();
+                            if (str[startPos - 1].HasChar(RegexWordSeparators, out int matchingCharIndex)) //if occur at start of word
                             {
                                 isStartOfWord = true;
                                 matchScore = 100 + (wSc - matchingCharIndex);
