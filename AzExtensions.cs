@@ -11,7 +11,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using AzUtil.Core;
-using Utf8Json;
+using System.Text.Json;
 
 namespace azutil_core
 {
@@ -44,6 +44,8 @@ namespace azutil_core
             return null;
         }
 
+
+
         public static async Task<string> GetCountyCodeByIp(this HttpClient httpClient, string ip = null)
         {
             ip ??= await httpClient.GetMyIp();
@@ -52,14 +54,10 @@ namespace azutil_core
             {
                 Uri uri = new Uri(string.Format(url, string.Empty));
                 HttpResponseMessage response = await httpClient.GetAsync(uri);
-                if (response.IsSuccessStatusCode)
-                {
-                    string content = await response.Content.ReadAsStringAsync();
-                    var json = JsonSerializer.Deserialize<dynamic>(content);
-                    string country = (string)json["country_code2"];
-                    return country.ToLower();
-                }
-                return null;
+                if (!response.IsSuccessStatusCode) return null;
+                string content = await response.Content.ReadAsStringAsync();
+                string country = content.ToFirstRegexMatch(@"(?<=\""country_code2\""\:"")[^\""]*");
+                return country.ToLower();
             }
             catch
             {
@@ -78,10 +76,10 @@ namespace azutil_core
         }
         public static string ToSerializedString<T>(this T obj)
         {
-            var ba= JsonSerializer.Serialize(obj);
+            var ba= JsonSerializer.SerializeToUtf8Bytes(obj);
             return Encoding.UTF8.GetString(ba, 0, ba.Length);
         }
-        public static byte[] ToSerializedByteArray<T>(this T obj) => JsonSerializer.Serialize(obj);
+        public static byte[] ToSerializedByteArray<T>(this T obj) => JsonSerializer.SerializeToUtf8Bytes(obj);
         public static bool HasDateOnly(this DateTime dateTime) => dateTime.Hour == 0 && dateTime.Minute == 0 && dateTime.Second == 0 && dateTime.Millisecond == 0;
         
         public static List<int> FindIndexes<T>(this IList<T> source, Func<T, bool> predicate)
@@ -1072,4 +1070,6 @@ namespace azutil_core
         [DebuggerStepThrough]
         public static string Right(this string value, int length) { return value[^length..]; }
     }
+    
+    
 }
