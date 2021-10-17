@@ -689,11 +689,15 @@ namespace azutil_core
             return output;
         }
 
+        // public static IEnumerable<T> RemoveDuplicates<T>(this IEnumerable<T> source, Func<T, T, bool> duplicateCriteria)
+        // {
+        //     source.GroupBy()
+        // }
         public static List<List<T>> SplitIntoGroups<T>(this IEnumerable<T> source, int groupSizeLimit)
         {
             if (groupSizeLimit < 0) throw new Exception("Group Size cannot be zero or less");
-            List<List<T>> list = new List<List<T>>();
-            List<T> subList = new List<T>();
+            var list = new List<List<T>>();
+            var subList = new List<T>();
             foreach (T item in source)
             {
                 if (subList.Count < groupSizeLimit)
@@ -867,7 +871,7 @@ namespace azutil_core
             return Regex.Replace(input, pattern, replaceWith, options);
         }
 
-        static readonly char[] RegexWordSeparators = new char[] { ' ', ',',':','=','\"','\'','-','?',';','=' };
+        private static readonly char[] regexRegexWordSeparators = new char[] { ' ', ',',':','=','\"','\'','-','?',';','=' };
         public static FindStringsResult FindStrings(this string str, string stringToFind, StringComparison stringComparison = StringComparison.CurrentCultureIgnoreCase)
         {
             List<FindStringMatch> matches = new List<FindStringMatch>();
@@ -899,8 +903,8 @@ namespace azutil_core
                         }
                         else
                         {
-                            int wSc = RegexWordSeparators.Count();
-                            if (str[startPos - 1].HasChar(RegexWordSeparators, out int matchingCharIndex)) //if occur at start of word
+                            int wSc = regexRegexWordSeparators.Count();
+                            if (str[startPos - 1].HasChar(regexRegexWordSeparators, out int matchingCharIndex)) //if occur at start of word
                             {
                                 isStartOfWord = true;
                                 matchScore = 100 + (wSc - matchingCharIndex);
