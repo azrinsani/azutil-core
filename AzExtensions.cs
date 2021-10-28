@@ -12,6 +12,7 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using AzUtil.Core;
 using System.Text.Json;
+using System.Threading;
 
 namespace azutil_core
 {
@@ -1073,6 +1074,17 @@ namespace azutil_core
         public static bool IsEmptyOrWhiteSpace(this string value) => value.All(char.IsWhiteSpace);
         [DebuggerStepThrough]
         public static string Right(this string value, int length) { return value[^length..]; }
+        
+        /// <summary>
+        /// By default, cancellation token source cancels asyncronously. This ensures the cancellation is done before continuing.
+        /// </summary>
+        /// <param name="cancellationTokenSource"></param>
+        public static void CancelWithBackgroundContinuations(this CancellationTokenSource cancellationTokenSource)
+        {
+            Task.Run(cancellationTokenSource.Cancel);
+            cancellationTokenSource.Token.WaitHandle.WaitOne(); // make sure to only continue when the cancellation completed (without waiting for all the callbacks)
+        }
+
     }
     
     
