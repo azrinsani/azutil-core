@@ -16,7 +16,6 @@ using System.Threading;
 
 namespace azutil_core
 {
-    //the guardians of his tru
     public static class AzExtensions
     {
         public static async Task<string> GetMyIp(this HttpClient httpClient)
