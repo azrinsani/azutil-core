@@ -198,10 +198,10 @@ namespace azutil_core
             if (source.Length <= 2) return source;
             return source[^2..] == "\r\n" ? source.Remove(source.Length - 2) : source;
         }
-        public static string RegexRemove(this string source, Regex regex, out List<string> removed)
+        public static string RegexRemove(this string source, Regex regex, out Collection<string> removed)
         {
             MatchCollection matches = regex.Matches(source);
-            removed = new List<string>();
+            removed = new Collection<string>();
             foreach (Match match in matches)
             {
                 if (match.Success)
