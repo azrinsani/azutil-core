@@ -701,11 +701,8 @@ namespace azutil_core
             var subList = new List<T>();
             foreach (T item in source)
             {
-                if (subList.Count < groupSizeLimit)
-                {
-                    subList.Add(item);
-                }
-                else
+                subList.Add(item);
+                if (subList.Count >= groupSizeLimit)
                 {
                     list.Add(subList);
                     subList = new List<T>();
