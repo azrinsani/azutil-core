@@ -5,6 +5,11 @@
     <RootNamespace>azutil_core</RootNamespace>
   </PropertyGroup>
 
+  <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+  </PropertyGroup>
+
   <ItemGroup>
     <None Remove=".gitattributes" />
     <None Remove=".gitignore" />
