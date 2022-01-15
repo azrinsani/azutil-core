@@ -421,16 +421,25 @@ namespace azutil_core
                 return null;
             }
         }
-        public static bool IsEqualToEither(this string s, params string[] comps)
-        {
-            foreach (string comp in comps) { if (string.Equals(comp, s)) return true; }
-            return false;
-        }
-        public static T ToEnum<T>(this string s, T valueIfError = default) where T: struct
-        {
-            if (Enum.TryParse(s, out T myEnum)) return myEnum; else return valueIfError;
-        }
 
+        public static string RepeatString(this string s, int numberOfTimes)
+        {
+            StringBuilder sb = new StringBuilder();
+            for (int n = 0; n < numberOfTimes; n++)
+            {
+                sb.Append(s);
+            }
+
+            return sb.ToString();
+        }
+        public static bool IsEqualToEither(this string s, params string[] comps) => comps.Any(comp => string.Equals(comp, s));
+        public static T ToEnum<T>(this string s, T valueIfError = default) where T: struct => Enum.TryParse(s, out T myEnum) ? myEnum : valueIfError;
+
+        public static T ToEnumFromInt<T>(this string s) where T: struct
+        {
+            T t = (T) Enum.ToObject(typeof(T), s.ToInt());
+            return t;
+        }
         public static string Last(this string s)
         {
             if (s.Length == 0) return "";
@@ -450,6 +459,12 @@ namespace azutil_core
         {
             string entryTrim = entry.Trim();
             return strings.Exists(s => string.Equals(s, entryTrim, StringComparison.InvariantCultureIgnoreCase));
+        }
+
+        public static string RemoveEmptyLines(this string text)
+        {
+            var regex = new Regex(@"\s*\r");
+            return text.RegexRemove(regex, out _);
         }
         public static string RemoveDiacritics(this string text)
         {
