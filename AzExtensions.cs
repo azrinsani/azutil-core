@@ -46,7 +46,6 @@ namespace azutil_core
             return null;
         }
 
-
         public static ICollection<T> RemoveWhere<T>(this ICollection<T> col, Func<T, bool> func)
         {
             var toRemoves = col.Where(func).ToList();
@@ -57,15 +56,15 @@ namespace azutil_core
             return col;
         }
         
-        public static IList<T> RemoveWhere<T>(this IList<T> col, Func<T, bool> func)
-        {
-            var toRemoves = col.Where(func).ToList();
-            foreach (var toRemove in toRemoves)
-            {
-                col.Remove(toRemove);
-            }
-            return col;
-        }
+        //public static IList<T> RemoveWhere<T>(this IList<T> col, Func<T, bool> func)
+        //{
+        //    var toRemoves = col.Where(func).ToList();
+        //    foreach (var toRemove in toRemoves)
+        //    {
+        //        col.Remove(toRemove);
+        //    }
+        //    return col;
+        //}
         
         
         public static async Task<string> GetCountyCodeByIp(this HttpClient httpClient, string ip = null)
