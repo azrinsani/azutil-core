@@ -19,6 +19,28 @@ namespace AzUtil.Core
     }
     public class Utilities : IAzUtil
     {
+        public static string GetNewTempFile(string extension)
+        {
+            if (!extension.StartsWith(".")) extension="." + extension;
+            string fileName;
+            bool bCollisions = false;
+            do {
+                fileName = Path.Combine(System.IO.Path.GetTempPath(), Guid.NewGuid().ToString() + extension);
+                try
+                {
+                    using (new FileStream(fileName, FileMode.CreateNew)) { }
+                    bCollisions = false;
+                }
+                catch (IOException)
+                {
+                    bCollisions = true;
+                }
+            }
+            while (bCollisions);
+            return fileName;
+        }
+        
+        
         public static int MySqlTimeout = 0;
 
         public static string RunCommand(string arguments, string workingDirectory, bool showWindow = true)
