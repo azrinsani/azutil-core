@@ -952,17 +952,20 @@ namespace azutil_core
             {
                 if (matches.Count == 1)
                 {
-                    if (0 < matches[0].StartPos) resParts.Add(new FindStringResultPart(str[0..matches[0].StartPos]));
+                    if (0 < matches[0].StartPos) resParts.Add(new FindStringResultPart(str[..matches[0].StartPos]));
                     if (matches[0].StartPos < matches[0].EndPos) resParts.Add(new FindStringResultPart(str[matches[0].StartPos..matches[0].EndPos], true));
                     if (matches[0].EndPos < str.Length) resParts.Add(new FindStringResultPart(str[matches[0].EndPos..]));
                 }
                 else
                 {                    
-                    matches.Sort((a, b) => { var compareRes = a.StartPos.CompareTo(b.StartPos); if (compareRes == 0) return (a.EndPos.CompareTo(b.EndPos)); else return compareRes; } );
+                    matches.Sort((a, b) =>
+                    {
+                        var compareRes = a.StartPos.CompareTo(b.StartPos);
+                        return compareRes == 0 ? a.EndPos.CompareTo(b.EndPos) : compareRes;
+                    } );
                     int cursor = 0;
                     for (int n3 = 0; n3 < matches.Count; n3++)
                     {
-
                         if (n3 == matches.Count - 1)
                         {
                             if (cursor < matches[n3].StartPos) resParts.Add(new FindStringResultPart(str[cursor..matches[n3].StartPos]));
