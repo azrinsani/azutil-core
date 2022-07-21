@@ -2,9 +2,7 @@
 {
     public class FindStringMatch
     {
-        public FindStringMatch(int startPos, int endPos, bool isStartOfSentence = false,
-            bool isStartOfWord = false,
-            int matchScore = 0)
+        public FindStringMatch(int startPos, int endPos, bool isStartOfSentence = false, bool isStartOfWord = false, int matchScore = 0)
         {
             StartPos = startPos;
             EndPos = endPos;

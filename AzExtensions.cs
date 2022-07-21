@@ -49,10 +49,7 @@ namespace azutil_core
         public static ICollection<T> RemoveWhere<T>(this ICollection<T> col, Func<T, bool> func)
         {
             var toRemoves = col.Where(func).ToList();
-            foreach (var toRemove in toRemoves)
-            {
-                col.Remove(toRemove);
-            }
+            foreach (var toRemove in toRemoves) col.Remove(toRemove);
             return col;
         }
 
@@ -83,7 +80,7 @@ namespace azutil_core
 
         public static string ToSerializedString<T>(this T obj)
         {
-            var ba= JsonSerializer.SerializeToUtf8Bytes(obj);
+            var ba = JsonSerializer.SerializeToUtf8Bytes(obj);
             return Encoding.UTF8.GetString(ba, 0, ba.Length);
         }
         
@@ -208,10 +205,7 @@ namespace azutil_core
             removed = new Collection<string>();
             foreach (Match match in matches)
             {
-                if (match.Success)
-                {
-                    removed.Add(match.Value);
-                }
+                if (match.Success) removed.Add(match.Value);
             }
             return regex.Replace(source, "");
         }
@@ -224,10 +218,7 @@ namespace azutil_core
 
         public static ICollection<T> RemoveRange<T>(this ICollection<T> source, IEnumerable<T> toRemoves)
         {
-            foreach (var toRemove in toRemoves)
-            {
-                source.Remove(toRemove);
-            }
+            foreach (var toRemove in toRemoves) source.Remove(toRemove);
             return source;
         }
         public static ICollection<T> AddRange<T>(this ICollection<T> source, IEnumerable<T> toAdds)
@@ -349,7 +340,7 @@ namespace azutil_core
         }
         
         public static string WhiteSpaceToNull(this string str) 
-            => (string.IsNullOrWhiteSpace(str) ? null : str);
+            => string.IsNullOrWhiteSpace(str) ? null : str;
 
         public static bool IsValidEmail(this string email)
         {
@@ -367,7 +358,6 @@ namespace azutil_core
 
                     // Pull out and process domain name (throws ArgumentException on invalid)
                     string domainName = idn.GetAscii(match.Groups[2].Value);
-
                     return match.Groups[1].Value + domainName;
                 }
             }
@@ -410,10 +400,7 @@ namespace azutil_core
         public static string RepeatString(this string s, int numberOfTimes)
         {
             StringBuilder sb = new StringBuilder();
-            for (int n = 0; n < numberOfTimes; n++)
-            {
-                sb.Append(s);
-            }
+            for (int n = 0; n < numberOfTimes; n++) sb.Append(s);
             return sb.ToString();
         }
         
@@ -474,7 +461,6 @@ namespace azutil_core
         public static string ToSha256(this string input)
         {
             var sb = new StringBuilder();
-
             using (var sha = System.Security.Cryptography.SHA256.Create())
             {
                 var bytes = Encoding.UTF8.GetBytes(input);
@@ -755,8 +741,8 @@ namespace azutil_core
         
         private static DateTime StringToDt(string tsStr, bool ifTimeZoneNotSpecifiedAssumeUtc = true)
         {
-            if (DateTime.TryParseExact(tsStr, new[] { "yyyy-MM-dd HH:mm:ss.fff", "yyyy-MM-dd HH:mm:ss", "yyyy-MM-dd HH:mm", "yyyy-M-d H:m:s", "yyyy-M-d HH:m:s.f" },
-                            CultureInfo.InvariantCulture, ifTimeZoneNotSpecifiedAssumeUtc ? DateTimeStyles.AssumeUniversal : DateTimeStyles.AssumeLocal, out DateTime dt))
+            if (DateTime.TryParseExact(tsStr, new[] { "yyyy-MM-dd HH:mm:ss.fff", "yyyy-MM-dd HH:mm:ss", "yyyy-MM-dd HH:mm", "yyyy-M-d H:m:s", "yyyy-M-d HH:m:s.f" }, 
+                    CultureInfo.InvariantCulture, ifTimeZoneNotSpecifiedAssumeUtc ? DateTimeStyles.AssumeUniversal : DateTimeStyles.AssumeLocal, out DateTime dt))
             { if (ifTimeZoneNotSpecifiedAssumeUtc) dt = dt.ToUniversalTime(); }
             else DateTime.TryParse(tsStr, null, ifTimeZoneNotSpecifiedAssumeUtc? DateTimeStyles.AssumeUniversal : DateTimeStyles.RoundtripKind, out dt); //This handles ECMA ISO8601 Date Format
             return dt;
@@ -892,7 +878,6 @@ namespace azutil_core
         {
             var matches = new List<FindStringMatch>();
             string[] stringsToFind = stringToFind.Split(new[] { ' ', ',' },StringSplitOptions.RemoveEmptyEntries);
-
             foreach (var toFind in stringsToFind)
             {
                 if (toFind.IsNullOrEmpty()) continue;
@@ -934,21 +919,15 @@ namespace azutil_core
                                 }
                             }
                         }
-                        
-                        FindStringMatch newMatch = new FindStringMatch(startPos, endPos, isStartOfSentence, 
-                            isStartOfWord, matchScore);
+                        FindStringMatch newMatch = new FindStringMatch(startPos, endPos, isStartOfSentence, isStartOfWord, matchScore);
                         strToProcess = str[newMatch.EndPos..];
                         strToProcessStartPos = newMatch.EndPos;
                         if (strToProcess.IsNullOrEmpty()) noMoreResults = true;
                         if (newMatch.IsStartOfSentence) { currentMatch = newMatch; break; }
                         if (currentMatch == null)
-                        {
                             currentMatch = newMatch;
-                        }
-                        else
-                        {
-                            if (newMatch.MatchScore > currentMatch.MatchScore) currentMatch = newMatch;
-                        }
+                        else if (newMatch.MatchScore > currentMatch.MatchScore) 
+                            currentMatch = newMatch;
                     }                    
                 }
 
@@ -959,10 +938,7 @@ namespace azutil_core
                     if (matches.Count > 0 && currentMatch.IsStartOfWord)
                     {
                         var lastMatch = matches.Last();
-                        if (lastMatch.IsStartOfWord)
-                        {
-                            currentMatch.MatchScore += 10000;
-                        }
+                        if (lastMatch.IsStartOfWord) currentMatch.MatchScore += 10000;
                     }
                     matches.Add(currentMatch);
                 }
@@ -995,10 +971,7 @@ namespace azutil_core
                             if (matches[n3].EndPos == (matches[n3+1].StartPos-1))
                             {
                                 var charAtPos = str[matches[n3 + 1].StartPos - 1];
-                                if (charAtPos.HasChar(new[] {' ',',','-' }, out _))
-                                {
-                                    matches[n3].MatchScore *= 2;
-                                }
+                                if (charAtPos.HasChar(new[] {' ',',','-' }, out _)) matches[n3].MatchScore *= 2;
                             }
                             if (matches[n3].EndPos >= matches[n3 + 1].StartPos)
                             {
@@ -1022,34 +995,22 @@ namespace azutil_core
         public static double Clamp(this double self, double min, double max)
         {
             if (max < min)
-            {
                 return max;
-            }
             else if (self < min)
-            {
                 return min;
-            }
             else if (self > max)
-            {
                 return max;
-            }
             return self;
         }
 
         public static int Clamp(this int self, int min, int max)
         {
             if (max < min)
-            {
                 return max;
-            }
             else if (self < min)
-            {
                 return min;
-            }
             else if (self > max)
-            {
                 return max;
-            }
             return self;
         }
 
