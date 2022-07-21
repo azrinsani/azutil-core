@@ -10,13 +10,12 @@ using System.Threading.Tasks;
 
 namespace AzUtil.Core
 {
-
-
     public interface IAzUtil
     {
         //Task<DataTable> SqlQueryAsync(string query, string connStr, params object[] Inputs);
         Task SendMail(SmtpSettings sMtp);
     }
+    
     public class Utilities : IAzUtil
     {
         public static string GetNewTempFile(string extension)
@@ -39,8 +38,7 @@ namespace AzUtil.Core
             while (bCollisions);
             return fileName;
         }
-        
-        
+
         public static int MySqlTimeout = 0;
 
         public static string RunCommand(string arguments, string workingDirectory, bool showWindow = true)
@@ -60,14 +58,10 @@ namespace AzUtil.Core
                     RedirectStandardOutput = true,
                     RedirectStandardError = false
                 };
-
                 var proc = Process.Start(startInfo);
-
                 if (proc == null) return output;
                 output = proc.StandardOutput.ReadToEnd();
-
                 proc.WaitForExit(60000);
-
                 return output;
             }
             catch (Exception)
@@ -76,10 +70,12 @@ namespace AzUtil.Core
             }
         }
 
-        public static string LogDirectory => RuntimeInformation.IsOSPlatform(OSPlatform.OSX) ? 
-            Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Library", "Logs") : 
-            Path.Combine(RuntimeInformation.IsOSPlatform(OSPlatform.Linux) ? 
-                "logs" : Directory.GetCurrentDirectory(), "logs");
+        public static string LogDirectory => RuntimeInformation.IsOSPlatform(OSPlatform.OSX) 
+            ? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Library", "Logs") 
+            : Path.Combine(RuntimeInformation.IsOSPlatform(OSPlatform.Linux) 
+                ? "logs" 
+                : Directory.GetCurrentDirectory(), "logs");
+        
         public async Task SendMail(SmtpSettings sMtp)
         {
             SmtpClient client = new SmtpClient(sMtp.Host, sMtp.Port)
@@ -104,7 +100,7 @@ namespace AzUtil.Core
         
         private static Dictionary<string, string> _worldTeleCodes;
         public static Dictionary<string, string> WorldTeleCodes =>
-            _worldTeleCodes ??= new Dictionary<string, string>()
+            _worldTeleCodes ??= new Dictionary<string, string>
             {
                 {"AF", "+93"},
                 {"AL", "+355"},
@@ -361,9 +357,9 @@ namespace AzUtil.Core
         public string Username { get; set; }
         public string Password { get; set; }
         public string MailFrom { get; set; }
-        public List<string> MailTos { get; set; } = new List<string>();
-        public List<string> MailBccs { get; set; } = new List<string>();
-        public List<string> MailCcs { get; set; }= new List<string>();
+        public List<string> MailTos { get; set; } = new();
+        public List<string> MailBccs { get; set; } = new();
+        public List<string> MailCcs { get; set; }= new();
         public string MailBody { get; set; }
         public string MailSubject { get; set; }
     }

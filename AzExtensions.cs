@@ -923,7 +923,11 @@ namespace azutil_core
                         strToProcess = str[newMatch.EndPos..];
                         strToProcessStartPos = newMatch.EndPos;
                         if (strToProcess.IsNullOrEmpty()) noMoreResults = true;
-                        if (newMatch.IsStartOfSentence) { currentMatch = newMatch; break; }
+                        if (newMatch.IsStartOfSentence)
+                        {
+                            currentMatch = newMatch; 
+                            break;
+                        }
                         if (currentMatch == null)
                             currentMatch = newMatch;
                         else if (newMatch.MatchScore > currentMatch.MatchScore) 
