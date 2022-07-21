@@ -919,6 +919,13 @@ namespace azutil_core
                                 }
                             }
                         }
+                        
+                        // If the Exact word is found (and the word is more than 2 characters), multiply the match
+                        if (toFind.Length > 2 && (endPos == str.Length || str[endPos].HasChar(regexRegexWordSeparators, out _)))
+                        {
+                            matchScore *= 2;
+                        }
+                        
                         FindStringMatch newMatch = new FindStringMatch(startPos, endPos, isStartOfSentence, isStartOfWord, matchScore);
                         strToProcess = str[newMatch.EndPos..];
                         strToProcessStartPos = newMatch.EndPos;
