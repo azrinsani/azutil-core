@@ -859,7 +859,7 @@ namespace azutil_core
 
         public static bool HasChar(this char c, char[] toMatchChars, out int matchingCharIndex)
         {
-            for (int n=0; n< toMatchChars.Count(); n++)
+            for (int n=0; n< toMatchChars.Length; n++)
             {
                 if (c != toMatchChars[n]) continue;
                 matchingCharIndex = n;
@@ -872,12 +872,14 @@ namespace azutil_core
         public static string ReplaceRegex(this string input, string pattern, string replaceWith, RegexOptions options = RegexOptions.IgnoreCase) 
             => Regex.Replace(input, pattern, replaceWith, options);
 
-        private static readonly char[] regexRegexWordSeparators = { ' ', ',',':','=','\"','\'','-','?',';','=' };
+        private static readonly char[] wordSeparators = { ' ', ',', ':', '=', '-', '[', ']', '(', ')', '?', ';', '{', '}', '|', '&', '_', '+', '<', '>', '@', '.', ';', '!', '#', '$', '*', '^', '~', '\"', '\''};
         
         public static FindStringsResult FindStrings(this string str, string stringToFind, StringComparison stringComparison = StringComparison.CurrentCultureIgnoreCase)
         {
             var matches = new List<FindStringMatch>();
             string[] stringsToFind = stringToFind.Split(new[] { ' ', ',' }, StringSplitOptions.RemoveEmptyEntries);
+            // string[] stringsToFind = stringToFind.Split(wordSeparators, StringSplitOptions.RemoveEmptyEntries);
+            int n = 0;
             foreach (var toFind in stringsToFind)
             {
                 if (toFind.IsNullOrEmpty()) continue;
@@ -895,19 +897,21 @@ namespace azutil_core
                         int endPos = startPos + toFind.Length;
                         bool isStartOfSentence = false;
                         bool isStartOfWord = false;
-                        int matchScore = 1; //a match anywhere in the string
-                        if (startPos == 0)
+                        int matchScore = 10; //a match anywhere in the string
+                        if (startPos == 0 && n == 0)
                         {
                             isStartOfSentence = true;
-                            matchScore = 10000;
+                            isStartOfWord = true;
                         }
                         else
                         {
-                            int wSc = regexRegexWordSeparators.Length;
-                            if (str[startPos - 1].HasChar(regexRegexWordSeparators, out int matchingCharIndex)) //if occur at start of word
+                            int wSc = wordSeparators.Length;
+                            int matchingCharIndex = 0;
+                            if (startPos == 0 || str[startPos - 1].HasChar(wordSeparators, out matchingCharIndex)) //if occur at start of word
                             {
                                 isStartOfWord = true;
-                                matchScore = 100 + (wSc - matchingCharIndex);
+                                matchScore = 100 + (wSc - matchingCharIndex) 
+                                                 + (30 - startPos); //Take in consideration the start position of the match 
                             }
                             else //if occur at centre of word
                             {
@@ -920,13 +924,38 @@ namespace azutil_core
                             }
                         }
                         
-                        // If the Exact word is found (and the word is more than 2 characters), multiply the match
-                        if (toFind.Length > 2 && (endPos == str.Length || str[endPos].HasChar(regexRegexWordSeparators, out _)))
+                        bool isCompleteWordMatch = false;
+                        if (toFind.Length > 2) // && (endPos == str.Length || str[endPos].HasChar(wordSeparators, out _)))
                         {
-                            matchScore *= 2;
+                            // If the Exact word is found (and the word is more than 2 characters), multiply the match
+                            if (endPos < str.Length)
+                            {
+                                if (startPos == 0 || str[startPos - 1].HasChar(wordSeparators, out _) 
+                                    && str[endPos].HasChar(wordSeparators, out _))
+                                {
+                                    matchScore = isStartOfSentence ? matchScore + 10000 : matchScore * 4; 
+                                    isCompleteWordMatch = true;
+                                }
+                                else if (isStartOfWord)
+                                {
+                                    matchScore *= 2;
+                                }
+                            }
+                            else
+                            {
+                                if (startPos == 0 || str[startPos - 1].HasChar(wordSeparators, out _))
+                                {
+                                    matchScore = isStartOfSentence ? matchScore + 10000 : matchScore * 4; 
+                                    isCompleteWordMatch = true;
+                                }
+                                else if (isStartOfWord)
+                                {
+                                    matchScore *= 2;
+                                }
+                            }
                         }
                         
-                        FindStringMatch newMatch = new FindStringMatch(startPos, endPos, isStartOfSentence, isStartOfWord, matchScore);
+                        FindStringMatch newMatch = new FindStringMatch(startPos, endPos, isStartOfSentence, isStartOfWord, matchScore, isCompleteWordMatch);
                         strToProcess = str[newMatch.EndPos..];
                         strToProcessStartPos = newMatch.EndPos;
                         if (strToProcess.IsNullOrEmpty()) noMoreResults = true;
@@ -942,18 +971,26 @@ namespace azutil_core
                     }                    
                 }
 
-                //Detect for word continuation (flush), as this must be a higher score.
-                //For example "Cik Ahmad Ismail", should be higher then "Ahmad" alone                
                 if (currentMatch != null)
                 {
-                    if (matches.Count > 0 && (currentMatch.IsStartOfWord || currentMatch.IsStartOfSentence))
+                    //Detect for word continuation (flush), as this must be a higher score.
+                    //For example "Cik Ahmad Ismail", should be higher then "Ahmad" alone                
+                    if (matches.Count > 0)
                     {
                         var lastMatch = matches.Last();
-                        if (lastMatch.IsStartOfWord) currentMatch.MatchScore += 10000;
+                        if (lastMatch.IsStartOfWord && currentMatch.StartPos > lastMatch.StartPos && currentMatch.IsStartOfWord)
+                        {
+                            currentMatch.MatchScore = currentMatch.IsCompleteWordMatch
+                                ? currentMatch.MatchScore + 20000
+                                : currentMatch.MatchScore + 10000; // If the Exact word is found
+                        }
                     }
                     matches.Add(currentMatch);
                 }
+                n++;
             }
+            
+            //Calculate the Result Parts
             var resParts = new List<FindStringResultPart>();
             if (matches.Count > 0)
             {
@@ -982,11 +1019,11 @@ namespace azutil_core
                         else
                         {
                             //Give higher score for matches that continue upon each other, with a comma or any separator in between
-                            if (matches[n3].EndPos == matches[n3+1].StartPos - 1)
-                            {
-                                var charAtPos = str[matches[n3 + 1].StartPos - 1];
-                                if (charAtPos.HasChar(new[] {' ',',','-' }, out _)) matches[n3].MatchScore *= 2;
-                            }
+                            // if (matches[n3].EndPos == matches[n3+1].StartPos - 1)
+                            // {
+                            //     var charAtPos = str[matches[n3 + 1].StartPos - 1];
+                            //     if (charAtPos.HasChar(new[] {' ',',','-' }, out _)) matches[n3].MatchScore *= 2;
+                            // }
                             if (matches[n3].EndPos >= matches[n3 + 1].StartPos)
                             {
                                 if (cursor < matches[n3].StartPos) resParts.Add(new FindStringResultPart(str[cursor..matches[n3].StartPos]));
