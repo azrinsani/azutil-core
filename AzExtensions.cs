@@ -875,7 +875,7 @@ namespace azutil_core
 
         private static readonly char[] wordSeparators = { ' ', ',', ':', '=', '-', '[', ']', '(', ')', '?', ';', '{', '}', '|', '&', '_', '+', '<', '>', '@', '.', ';', '!', '#', '$', '*', '^', '~', '\"', '\''};
         
-        public static FindStringsResult FindStrings(this string str, string stringToFind, StringComparison stringComparison = StringComparison.CurrentCultureIgnoreCase)
+        public static FindStringsResult FindStrings(this string fullString, string stringToFind, StringComparison stringComparison = StringComparison.CurrentCultureIgnoreCase)
         {
             var matches = new List<FindStringMatch>();
             string[] stringsToFind = stringToFind.Split(new[] { ' ', ',' }, StringSplitOptions.RemoveEmptyEntries);
@@ -886,7 +886,7 @@ namespace azutil_core
                 bool noMoreResults = false;
                 FindStringMatch currentMatch = null;
                 int strToProcessStartPos = 0;
-                var strToProcess = str;
+                var strToProcess = fullString;
                 while (!noMoreResults) //for every word keep testing the entire string to find which word gives the highest score. A word that starts at the beginning will is scored higher
                 {
                     var index = strToProcess.IndexOf(toFind, stringComparison);
@@ -897,7 +897,7 @@ namespace azutil_core
                         int endPos = startPos + toFind.Length;
                         bool isStartOfSentence = false;
                         bool isStartOfWord = false;
-                        int matchScore = 10; //a match anywhere in the string
+                        int matchScore = 10; //A match anywhere in the string
                         if (startPos == 0 && n == 0)
                         {
                             isStartOfSentence = true;
@@ -907,7 +907,7 @@ namespace azutil_core
                         {
                             int wSc = wordSeparators.Length;
                             int matchingCharIndex = 0;
-                            if (startPos == 0 || str[startPos - 1].HasChar(wordSeparators, out matchingCharIndex)) //if occur at start of word
+                            if (startPos == 0 || fullString[startPos - 1].HasChar(wordSeparators, out matchingCharIndex)) //if occur at start of word
                             {
                                 isStartOfWord = true;
                                 matchScore = 100 + (wSc - matchingCharIndex) 
@@ -917,7 +917,7 @@ namespace azutil_core
                             {
                                 if (toFind.Length == 1) //If searching for a single letter, only consider results when it occurs at the start of a word
                                 {
-                                    strToProcess = str[endPos..];
+                                    strToProcess = fullString[endPos..];
                                     strToProcessStartPos = endPos;
                                     continue;
                                 }
@@ -925,38 +925,35 @@ namespace azutil_core
                         }
                         
                         bool isCompleteWordMatch = false;
-                        if (toFind.Length > 2) // && (endPos == str.Length || str[endPos].HasChar(wordSeparators, out _)))
+                        switch (toFind.Length)
                         {
-                            // If the Exact word is found (and the word is more than 2 characters), multiply the match
-                            if (endPos < str.Length)
+                            // If searching for a single Alphabet
+                            case 1 when stringsToFind.Length == 1:
                             {
-                                if (startPos == 0 || str[startPos - 1].HasChar(wordSeparators, out _) 
-                                    && str[endPos].HasChar(wordSeparators, out _))
+                                if (isStartOfSentence) matchScore += 10000;
+                                else if (isStartOfWord) matchScore *= 4;
+                                break;
+                            }
+                            // If match is Start of word/sentence but not end of Sentence
+                            case > 1 when endPos < fullString.Length && isStartOfWord:
+                            {
+                                if (fullString[endPos].HasChar(wordSeparators, out _)) //Complete word match
                                 {
                                     matchScore = isStartOfSentence ? matchScore + 10000 : matchScore * 4; 
                                     isCompleteWordMatch = true;
                                 }
-                                else if (isStartOfWord)
-                                {
-                                    matchScore *= 2;
-                                }
+                                else matchScore = isStartOfSentence ? matchScore + 10000 : matchScore * 2;
+                                break;
                             }
-                            else
-                            {
-                                if (startPos == 0 || str[startPos - 1].HasChar(wordSeparators, out _))
-                                {
-                                    matchScore = isStartOfSentence ? matchScore + 10000 : matchScore * 4; 
-                                    isCompleteWordMatch = true;
-                                }
-                                else if (isStartOfWord)
-                                {
-                                    matchScore *= 2;
-                                }
-                            }
+                            // If match is Start of word/sentence but end of sentence (making it a complete word match)
+                            case > 1 when isStartOfWord:
+                                matchScore = isStartOfSentence ? matchScore + 10000 : matchScore * 4; 
+                                isCompleteWordMatch = true;
+                                break;
                         }
                         
                         FindStringMatch newMatch = new FindStringMatch(startPos, endPos, isStartOfSentence, isStartOfWord, matchScore, isCompleteWordMatch);
-                        strToProcess = str[newMatch.EndPos..];
+                        strToProcess = fullString[newMatch.EndPos..];
                         strToProcessStartPos = newMatch.EndPos;
                         if (strToProcess.IsNullOrEmpty()) noMoreResults = true;
                         if (newMatch.IsStartOfSentence)
@@ -996,9 +993,9 @@ namespace azutil_core
             {
                 if (matches.Count == 1)
                 {
-                    if (0 < matches[0].StartPos) resParts.Add(new FindStringResultPart(str[..matches[0].StartPos]));
-                    if (matches[0].StartPos < matches[0].EndPos) resParts.Add(new FindStringResultPart(str[matches[0].StartPos..matches[0].EndPos], true));
-                    if (matches[0].EndPos < str.Length) resParts.Add(new FindStringResultPart(str[matches[0].EndPos..]));
+                    if (0 < matches[0].StartPos) resParts.Add(new FindStringResultPart(fullString[..matches[0].StartPos]));
+                    if (matches[0].StartPos < matches[0].EndPos) resParts.Add(new FindStringResultPart(fullString[matches[0].StartPos..matches[0].EndPos], true));
+                    if (matches[0].EndPos < fullString.Length) resParts.Add(new FindStringResultPart(fullString[matches[0].EndPos..]));
                 }
                 else
                 {                    
@@ -1012,9 +1009,9 @@ namespace azutil_core
                     {
                         if (n3 == matches.Count - 1)
                         {
-                            if (cursor < matches[n3].StartPos) resParts.Add(new FindStringResultPart(str[cursor..matches[n3].StartPos]));
-                            if (matches[n3].StartPos < matches[n3].EndPos) resParts.Add(new FindStringResultPart(str[matches[n3].StartPos..matches[n3].EndPos], true));
-                            if (matches[n3].EndPos < str.Length) resParts.Add(new FindStringResultPart(str[matches[n3].EndPos..]));
+                            if (cursor < matches[n3].StartPos) resParts.Add(new FindStringResultPart(fullString[cursor..matches[n3].StartPos]));
+                            if (matches[n3].StartPos < matches[n3].EndPos) resParts.Add(new FindStringResultPart(fullString[matches[n3].StartPos..matches[n3].EndPos], true));
+                            if (matches[n3].EndPos < fullString.Length) resParts.Add(new FindStringResultPart(fullString[matches[n3].EndPos..]));
                         }
                         else
                         {
@@ -1026,14 +1023,14 @@ namespace azutil_core
                             // }
                             if (matches[n3].EndPos >= matches[n3 + 1].StartPos)
                             {
-                                if (cursor < matches[n3].StartPos) resParts.Add(new FindStringResultPart(str[cursor..matches[n3].StartPos]));
-                                if (matches[n3].StartPos < matches[n3 + 1].StartPos) resParts.Add(new FindStringResultPart(str[matches[n3].StartPos..matches[n3 + 1].StartPos], true));
+                                if (cursor < matches[n3].StartPos) resParts.Add(new FindStringResultPart(fullString[cursor..matches[n3].StartPos]));
+                                if (matches[n3].StartPos < matches[n3 + 1].StartPos) resParts.Add(new FindStringResultPart(fullString[matches[n3].StartPos..matches[n3 + 1].StartPos], true));
                                 cursor = matches[n3 + 1].StartPos;
                             }
                             else
                             {
-                                if (cursor < matches[n3].StartPos) resParts.Add(new FindStringResultPart(str[cursor..matches[n3].StartPos]));
-                                if (matches[n3].StartPos < matches[n3].EndPos) resParts.Add(new FindStringResultPart(str[matches[n3].StartPos..matches[n3].EndPos], true));
+                                if (cursor < matches[n3].StartPos) resParts.Add(new FindStringResultPart(fullString[cursor..matches[n3].StartPos]));
+                                if (matches[n3].StartPos < matches[n3].EndPos) resParts.Add(new FindStringResultPart(fullString[matches[n3].StartPos..matches[n3].EndPos], true));
                                 cursor = matches[n3].EndPos;
                             }
                         }
