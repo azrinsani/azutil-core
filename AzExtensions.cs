@@ -22,8 +22,8 @@ namespace azutil_core
     {
         public static async Task<string> GetMyIp(this HttpClient httpClient)
         {
-            var services = new List<string>()
-                {
+            var services = new List<string>
+            {
                     "https://ipv4.icanhazip.com",
                     "https://api.ipify.org",
                     "https://ipinfo.io/ip",
@@ -126,6 +126,7 @@ namespace azutil_core
 
         public static bool CompareWithTreatNullWhiteSpaceAsEqual(this string a, string b) 
             => string.IsNullOrWhiteSpace(a) ? string.IsNullOrWhiteSpace(b) : string.Equals(a, b);
+        
         public static bool CompareWithTreatNullEmptyAsEqual(this string a, string b) 
             => string.IsNullOrEmpty(a) ? string.IsNullOrEmpty(b) : string.Equals(a, b);
 
@@ -878,7 +879,6 @@ namespace azutil_core
         {
             var matches = new List<FindStringMatch>();
             string[] stringsToFind = stringToFind.Split(new[] { ' ', ',' }, StringSplitOptions.RemoveEmptyEntries);
-            // string[] stringsToFind = stringToFind.Split(wordSeparators, StringSplitOptions.RemoveEmptyEntries);
             int n = 0;
             foreach (var toFind in stringsToFind)
             {
