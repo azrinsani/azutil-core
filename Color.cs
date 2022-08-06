@@ -1,7 +1,5 @@
-﻿//using Npgsql;
-using System;
+﻿using System;
 using System.Globalization;
-using azutil_core;
 
 namespace AzUtil.Core
 {

@@ -15,7 +15,7 @@ using System.Text.Json;
 using System.Threading;
 
 //UPDATE 21/7/2022
-namespace azutil_core
+namespace AzUtil.Core
 {
     //Global Extensions
     public static class AzExtensions

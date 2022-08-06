@@ -1,4 +1,4 @@
-﻿namespace azutil_core
+﻿namespace AzUtil.Core
 {
     public struct FindStringResultPart
     {
