@@ -240,7 +240,7 @@ namespace AzUtil.Core
             }
             return collection;
         }
-        
+        public static List<T2> ToClonedList<T, T2>(this IEnumerable<T> source, Func<T, T2> transformItem) => source.Select(transformItem).ToList();
         public static byte[] ToByteArray(this Stream input)
         {
             byte[] buffer = new byte[16 * 1024];
