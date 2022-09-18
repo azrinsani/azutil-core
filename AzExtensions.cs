@@ -53,6 +53,14 @@ namespace AzUtil.Core
             return col;
         }
 
+        public static ICollection<T> RemoveWhere<T>(this ICollection<T> col, Func<T, bool> func, out List<T> removedItems)
+        {
+            var toRemoves = col.Where(func).ToList();
+            foreach (var toRemove in toRemoves) col.Remove(toRemove);
+            removedItems = toRemoves;
+            return col;
+        }
+
         public static async Task<string> GetCountyCodeByIp(this HttpClient httpClient, string ip = null)
         {
             ip ??= await httpClient.GetMyIp();
