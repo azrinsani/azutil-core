@@ -37,7 +37,7 @@ namespace AzUtil.Core
             return HashCode.Combine(Latitude, Longitude, IsUnknown);
         }
 
-        public static bool operator ==(Coordinate left, Coordinate right)
+        public static bool operator == (Coordinate left, Coordinate right)
         {
             return left.Equals(right);
         }

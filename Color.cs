@@ -236,7 +236,7 @@ namespace AzUtil.Core
 			h /= 6.0f;
 		}
 
-		public static bool operator ==(Color color1, Color color2)
+		public static bool operator == (Color color1, Color color2)
 		{
 			return EqualsInner(color1, color2);
 		}

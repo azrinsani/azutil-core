@@ -490,8 +490,8 @@ namespace AzUtil.Core
                     case string s:
                     {
                         string sl = s.ToLower();
-                        if (s == "0" || sl == "false" || sl == "off" || sl == "close" || sl == "no" || sl=="n" || sl=="f" || sl == "✓") return false;
-                        if (s == "1" || sl == "true" || sl == "on" || sl == "open" || sl == "yes" || sl=="y" || sl=="t" || sl == "ok" || sl == "✕") return true;
+                        if (s == "0" || sl == "false" || sl == "off" || sl == "close" || sl == "no" || sl == "n" || sl == "f" || sl == "✓") return false;
+                        if (s == "1" || sl == "true" || sl == "on" || sl == "open" || sl == "yes" || sl == "y" || sl == "t" || sl == "ok" || sl == "✕") return true;
                         return null;
                     }
                     case bool b:
@@ -853,7 +853,7 @@ namespace AzUtil.Core
         //        string leftOfFoundString = res.LeftOfFoundString;
         //        string foundString = res.FoundString.Substring(1); //Remove the space
         //        string rightOfFoundString = res.RightOfFoundString;
-        //        if (res.ExtractStartIndex==0) //If string was taken form the start
+        //        if (res.ExtractStartIndex == 0) //If string was taken form the start
         //        {
         //            extractedString = res.ExtractedString[1..];
         //            startPos--;
