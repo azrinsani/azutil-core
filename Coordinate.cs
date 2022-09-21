@@ -42,7 +42,7 @@ namespace AzUtil.Core
             return left.Equals(right);
         }
 
-        public static bool operator !=(Coordinate left, Coordinate right)
+        public static bool operator != (Coordinate left, Coordinate right)
         {
             return !(left == right);
         }

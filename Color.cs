@@ -241,7 +241,7 @@ namespace AzUtil.Core
 			return EqualsInner(color1, color2);
 		}
 
-		public static bool operator !=(Color color1, Color color2)
+		public static bool operator != (Color color1, Color color2)
 		{
 			return !EqualsInner(color1, color2);
 		}
