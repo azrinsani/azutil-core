@@ -757,16 +757,22 @@ namespace AzUtil.Core
             return dt;
         }
         
-        public static Single ToSingle(this object value)
+        public static float ToSingle(this object value)
         {
             try { return Convert.ToSingle(value); }
             catch { return 0;}
         }
         
-        public static Double ToDouble(this object value)
+        public static double ToDouble(this object value)
         {
             try { return Convert.ToDouble(value); }
             catch { return 0; }
+        }
+        
+        public static double ToDouble(this object value, double defaultValueIfError)
+        {
+            try { return Convert.ToDouble(value); }
+            catch { return defaultValueIfError; }
         }
         
         public static long ToLong(this object value, Int64 defaultValueIfError = 0)
