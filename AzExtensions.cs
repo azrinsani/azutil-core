@@ -953,7 +953,7 @@ namespace AzUtil.Core
                             {
                                 if (fullString[endPos].HasChar(wordSeparators, out _)) //Complete word match
                                 {
-                                    matchScore = isStartOfSentence ? matchScore + 10000 : matchScore * 4; 
+                                    matchScore = isStartOfSentence ? matchScore + 10001 : matchScore * 4; 
                                     isCompleteWordMatch = true;
                                 }
                                 else matchScore = isStartOfSentence ? matchScore + 10000 : matchScore * 2;
