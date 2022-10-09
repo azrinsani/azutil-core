@@ -39,34 +39,51 @@ namespace AzUtil.Core
             return fileName;
         }
 
-        public static int MySqlTimeout = 0;
-
-        public static string RunCommand(string arguments, string workingDirectory, bool showWindow = true)
+        public static string RunCommand(string fileName, string arguments, string workingDirectory, bool showWindow = true)
         {
             var output = string.Empty;
             try
             {
-                var startInfo = new ProcessStartInfo()
+                ProcessStartInfo startInfo;
+                if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
                 {
-                    Verb = "runas",
-                    FileName = "cmd.exe",
-                    Arguments = "/C "+arguments,
-                    WindowStyle = showWindow? ProcessWindowStyle.Normal: ProcessWindowStyle.Hidden,
-                    UseShellExecute = false,
-                    WorkingDirectory = workingDirectory,
-                    CreateNoWindow = !showWindow,
-                    RedirectStandardOutput = true,
-                    RedirectStandardError = false
-                };
+                    startInfo = new ProcessStartInfo
+                    {
+                        Verb = "runas",
+                        FileName = fileName,
+                        Arguments = arguments,
+                        WindowStyle = showWindow? ProcessWindowStyle.Normal: ProcessWindowStyle.Hidden,
+                        UseShellExecute = false,
+                        WorkingDirectory = workingDirectory,
+                        CreateNoWindow = !showWindow,
+                        RedirectStandardOutput = true,
+                        RedirectStandardError = false
+                    };
+                }
+                else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+                {
+                    startInfo = new ProcessStartInfo
+                    {
+                        FileName = fileName,
+                        Arguments = arguments,
+                        UseShellExecute = false,
+                        WorkingDirectory = workingDirectory,
+                        CreateNoWindow = !showWindow,
+                        RedirectStandardOutput = true,
+                        RedirectStandardError = false
+                    };
+                }
+                else throw new NotSupportedException("Only Support Mac and Windows");
                 var proc = Process.Start(startInfo);
                 if (proc == null) return output;
                 output = proc.StandardOutput.ReadToEnd();
+                Console.WriteLine(output);
                 proc.WaitForExit(60000);
                 return output;
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                return output;
+                return ex.ToString();
             }
         }
 
