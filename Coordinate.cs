@@ -15,7 +15,7 @@ namespace AzUtil.Core
         public double Longitude { get; }
 
         public bool IsUnknown { get; }
-        public static Coordinate Unknown => new Coordinate(0, 0, true);
+        public static Coordinate Unknown => new(0, 0, true);
 
         public override bool Equals(object obj)
         {
