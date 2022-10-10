@@ -4,6 +4,10 @@
     <TargetFramework>netstandard2.1</TargetFramework>
     <RootNamespace>AzUtil.Core</RootNamespace>
     <LangVersion>9</LangVersion>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <PackageId>azutil-core</PackageId>
+    <Authors>Azrin Sani</Authors>
+    <PackageIcon>azrin.png</PackageIcon>
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
@@ -18,6 +22,10 @@
   <ItemGroup>
     <None Remove=".gitattributes" />
     <None Remove=".gitignore" />
+    <None Update="azrin.png">
+      <Pack>True</Pack>
+      <PackagePath></PackagePath>
+    </None>
   </ItemGroup>
 
   <ItemGroup>
