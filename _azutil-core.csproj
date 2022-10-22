@@ -8,6 +8,9 @@
     <PackageId>azutil-core</PackageId>
     <Authors>Azrin Sani</Authors>
     <PackageIcon>azrin.png</PackageIcon>
+    <Configurations>Debug;Release;Nuget</Configurations>
+    <Platforms>AnyCPU</Platforms>
+    <PackageVersion>1.0.1</PackageVersion>
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
