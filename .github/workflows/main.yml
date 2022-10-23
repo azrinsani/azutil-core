@@ -17,6 +17,8 @@ jobs:
         uses: actions/setup-dotnet@v1
         with:
           dotnet-version: 6.0.x
-      - name: Push generated package to GitHub registry
+      - name: Build
+        run: dotnet pack _azutil-core.csproj -c Release -o bin/Nuget
+      - name: Push to Nuget
         run: dotnet nuget push ./bin/Nuget/*. --api-key ${{secrets.NUGET_API_KEY}} --source https://api.nuget.org/v3/index.json --skip-duplicate --no-symbols true
 
