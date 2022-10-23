@@ -18,7 +18,7 @@ jobs:
         with:
           dotnet-version: 6.0.x
       - name: Build
-        run: dotnet pack _azutil-core.csproj -c Nuget
+        run: dotnet publish _azutil-core.csproj -c Nuget
       - name: Push to Nuget
         run: dotnet nuget push ./bin/Nuget/*. --api-key ${{secrets.NUGET_API_KEY}} --source https://api.nuget.org/v3/index.json --skip-duplicate --no-symbols true
 
