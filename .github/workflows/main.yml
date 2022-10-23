@@ -1,0 +1,22 @@
+name: NuGet Generation
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - master
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    name: Update NuGet package
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+      - name: Setup .NET Core @ Latest
+        uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: 6.0.x
+      - name: Push generated package to GitHub registry
+        run: dotnet nuget push ./bin/Nuget/*. --api-key ${{secrets.NUGET_API_KEY --source https://api.nuget.org/v3/index.json --skip-duplicate --no-symbols true
+
