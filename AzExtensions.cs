@@ -239,6 +239,14 @@ namespace AzUtil.Core
             return source;
         }
         
+        public static string ToTitleCase(this string source)
+        {
+            if (source == null) return null;
+            if (source.Length == 0) return "";
+            if (source.Length == 1) return source.ToUpper();
+            return source[0].ToString().ToUpper() + source[1..].ToLower();
+        }
+        
         public static Collection<T> ToCollection<T>(this IEnumerable<T> source)
         {
             var collection = new Collection<T>();
