@@ -10,7 +10,7 @@
     <PackageIcon>azrin.png</PackageIcon>
     <Configurations>Debug;Release;Nuget</Configurations>
     <Platforms>AnyCPU</Platforms>
-    <PackageVersion>1.0.2</PackageVersion>
+    <PackageVersion>1.0.3</PackageVersion>
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
