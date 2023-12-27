@@ -364,8 +364,7 @@ namespace AzUtil.Core
                 {"ZW", "+263"}
             };
     }
-
-
+    
     public class SmtpSettings
     {
         public string Host { get; set; } = "127.0.0.1";

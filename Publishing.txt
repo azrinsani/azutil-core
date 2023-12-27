@@ -1,5 +1,5 @@
 Publishing to Nuget
 ~~~~~~~~~~~~~~~~~~~
-- Increment the Nuget Package Version '<PackageVersion>X.X.X</PackageVersion>'
-- Push to Master, this will trigger the yml script at '.github/workflows/main.yml'
-- To confirm check you can check the nuget package at 'https://www.nuget.org/packages/azutil-core/'
+- Increment the Nuget Package Version in the _azutil.csproj file. '<PackageVersion>X.X.X</PackageVersion>'
+- Login to Github and Push to Master. This will trigger the yml script at '.github/workflows/main.yml'
+- To confirm check you can check the nuget package at 'https://www.nuget.org/packages/azutil-core/', this will take some time
